@@ -474,7 +474,7 @@ add_tlsa()
 	local certname="$1"; shift
 	shcertname="`shcertname $certname`"
 	eval tlsa="\$tlsa_$shcertname"
-	set_rc tlsa_$shcertname "$tlsa $@"
+	set_rc tlsa_"$shcertname" "$tlsa $@"
 }
 
 # Delete port/pro/host for TLSA output
@@ -488,7 +488,7 @@ del_tlsa()
 	do
 		tlsa="`echo $tlsa | remove_item \"$t\"`"
 	done
-	set_rc tlsa_$shcertname "$tlsa"
+	set_rc tlsa_"$shcertname" "$tlsa"
 }
 
 # Show port/pro/host for TLSA output
@@ -581,7 +581,7 @@ add_reload()
 	local certname="$1"; shift
 	shcertname="`shcertname $certname`"
 	eval reload="\$reload_$shcertname"
-	set_rc reload_$shcertname "$reload $@"
+	set_rc reload_"$shcertname" "$reload $@"
 }
 
 # Delete services to reload on rollover
@@ -595,7 +595,7 @@ del_reload()
 	do
 		reload="`echo $reload | remove_item \"$t\"`"
 	done
-	set_rc reload_$shcertname "$reload"
+	set_rc reload_"$shcertname" "$reload"
 }
 
 # Show services to reload on rollover
@@ -617,7 +617,7 @@ reload()
 	eval reload="\$reload_$shcertname"
 	for service in $reload
 	do
-		run systemctl reload $service
+		run systemctl reload "$service"
 	done
 }
 
@@ -729,16 +729,16 @@ del_line()
 
 add_rc()
 {
-	[ -f $danectlrc ] || touch $danectlrc
-	add_line $danectlrc "$@"
+	[ -f "$danectlrc" ] || touch "$danectlrc"
+	add_line "$danectlrc" "$@"
 }
 
 # Delete a line from ~/.danectlrc
 
 del_rc()
 {
-	[ -f $danectlrc ] || touch $danectlrc
-	del_line $danectlrc "$@"
+	[ -f "$danectlrc" ] || touch "$danectlrc"
+	del_line "$danectlrc" "$@"
 }
 
 # Set or replace a variable in ~/.danectlrc
@@ -766,14 +766,14 @@ remove_item()
 shcertname()
 {
 	local certname="$1"
-	echo $certname | sed 's/\./_/g'
+	echo "$certname" | sed 's/\./_/g'
 }
 
 # Check prerequisites
 
 check_prerequisites()
 {
-	[ -d $le ] || die "Failed to find $le"
+	[ -d "$le" ] || die "Failed to find $le"
 	for x in grep sed awk perl host readlink certbot openssl sha256sum systemctl
 	do
 		[ -x "/usr/bin/$x" ] || die "Failed to find /usr/bin/$x"

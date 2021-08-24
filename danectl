@@ -127,6 +127,7 @@ SYNOPSIS
   reload <certname...>                   - Reload affected services
   rollover <certname...>                 - Perform a key rollover
   status                                 - Show current/next status
+  aliases                                - Show subcommand aliases
 
 DESCRIPTION
 

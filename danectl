@@ -896,7 +896,7 @@ case "$command" in
 		del_tlsa "$@"
 		;;
 
-	show-tlsa|st)
+	show-tlsa|tlsa-show|st|ts)
 		[ $# != 1 ] && usage 1 "Missing show-tlsa argument"
 		check_prerequisites
 		check_certnames "$1"
@@ -924,21 +924,21 @@ case "$command" in
 		for certname in "$@"; do tlsa_check "$certname"; done
 		;;
 
-	add-reload|ar)
+	add-reload|reload-add|ar|ra)
 		[ $# -lt 2 ] && usage 1 "Missing add-reload argument(s)"
 		check_prerequisites
 		check_certnames "$1"
 		add_reload "$@"
 		;;
 
-	del-reload|dr)
+	del-reload|delete-reload|reload-del|reload-delete|dr|rd)
 		[ $# -lt 2 ] && usage 1 "Missing del-reload argument(s)"
 		check_prerequisites
 		check_certnames "$1"
 		del_reload "$@"
 		;;
 
-	show-reload|sr)
+	show-reload|reload-show|sr|rs)
 		[ $# != 1 ] && usage 1 "Missing show-reload argument"
 		check_prerequisites
 		check_certnames "$1"
@@ -972,13 +972,13 @@ case "$command" in
 		echo "dup: duplicate d next"
 		echo "add-tlsa: tlsa-add at ta"
 		echo "del-tlsa: delete-tlsa tlsa-del tlsa-delete dt td"
-		echo "show-tlsa: st"
+		echo "show-tlsa: tlsa-show st ts"
 		echo "tlsa-current: tc"
 		echo "tlsa-next: tn"
 		echo "tlsa-check: tch* ch*"
-		echo "add-reload: ar"
-		echo "del-reload: dr"
-		echo "show-reload: sr"
+		echo "add-reload: reload-add ar ra"
+		echo "del-reload: delete-reload reload-del reload-delete dr rd"
+		echo "show-reload: reload-show sr rs"
 		echo "reload: r"
 		echo "rollover: ro"
 		echo "status: s"

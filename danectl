@@ -774,6 +774,7 @@ shcertname()
 check_prerequisites()
 {
 	[ -d "$le" ] || die "Failed to find $le"
+	[ -r "$le/live" ] || die "Failed to read $le/live (use sudo)"
 	for x in grep sed awk perl host readlink certbot openssl sha256sum systemctl
 	do
 		[ -x "/usr/bin/$x" ] || die "Failed to find /usr/bin/$x"

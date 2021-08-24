@@ -1,0 +1,994 @@
+#!/bin/sh
+# danectl - a DANE-friendly Certbot workflow
+#
+# Copyright (C) 2021 raf <raf@raf.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, see <https://www.gnu.org/licenses/>.
+#
+# 20210824 raf <raf@raf.org>
+
+name=danectl
+version=0.1
+date=20210824
+
+# Some defaults
+
+test=0
+verbose=0
+quiet=
+le=/etc/letsencrypt
+danectlrc="$HOME/.danectlrc"
+
+# The short -h --help usage message
+
+usage()
+{
+	local rc="$1"; shift
+	[ -z "$@" ] || echo "$name: $@" >&2
+	cat << USAGE
+usage: $name [options] command [arg...]
+options:
+ -h, --help                              - Show a short help message
+ -V, --version                           - Show the name and version
+ -v, --verbose                           - Verbose mode (announce actions)
+ -q, --quiet                             - Quiet mode (pass -q to certbot)
+ -n, --test                              - Test mode (don't do things)
+commands:
+ help                                    - Show more help than -h does
+ certbot <options...>                    - Supply certbot command line options
+ adopt <certname...>                     - Convert existing cert to reuse_key
+ new <domain...>                         - Create a new original/current cert
+ dup <domain...>                         - Create a new duplicate/next cert
+ add-tlsa <certname> <_#._tcp[.host]...> - Add port/pro/host for TLSA output
+ del-tlsa <certname> <_#._tcp[.host]...> - Delete port/pro/host for TLSA output
+ show-tlsa <certname>                    - Show port/pro/host for TLSA output
+ tlsa-current <certname...>              - Output TLSA RRs for the current key
+ tlsa-next <certname...>                 - Output TLSA RRs for the next key
+ tlsa-check <certname...>                - Check that TLSA RRs are published
+ add-reload <certname> <service...>      - Add services to reload on rollover
+ del-reload <certname> <service...>      - Delete services to reload on rollover
+ show-reload <certname>                  - Show services to reload on rollover
+ reload <certname...>                    - Reload affected services
+ rollover <certname...>                  - Perform a key rollover
+ status                                  - Show current/next status
+ aliases                                 - Show subcommand aliases
+
+Danectl provides a DANE-friendly Certbot workflow. For background, see:
+ https://en.wikipedia.org/wiki/DNS-based_Authentication_of_Named_Entities
+ https://community.letsencrypt.org/t/a-dane-friendly-certbot-workflow
+Then read:
+ danectl help
+
+Name: $name
+Version: $version
+Date: $date
+Author: raf <raf@raf.org>
+URL: https://raf.org/danectl
+URL: https://github.com/raforg/danectl
+
+Copyright (C) 2021 raf <raf@raf.org>
+
+This is free software released under the terms of the GPLv2+:
+
+  https://www.gnu.org/licenses/
+
+There is no warranty; not even for merchantability or fitness
+for a particular purpose.
+
+Report bugs to raf <raf@raf.org>
+USAGE
+	exit "$rc"
+}
+
+# The long help message
+
+help()
+{
+	cat << HELP
+NAME
+
+danectl - a DANE-friendly Certbot workflow
+
+SYNOPSIS
+
+ usage: $name [options] command [arg...]
+ options:
+  -h, --help                             - Show a short help message
+  -V, --version                          - Show the name and version
+  -v, --verbose                          - Verbose mode (announce actions)
+  -q, --quiet                            - Quiet mode (pass -q to certbot)
+  -n, --test                             - Test mode (don't do things)
+ commands:
+  help                                   - Show more help than -h does
+  certbot <options...>                   - Supply certbot command line options
+  adopt <certname...>                    - Convert existing cert to reuse_key
+  new <domain...>                        - Create a new original/current cert
+  dup <domain...>                        - Create a new duplicate/next cert
+  add-tlsa <certname> <_#._tcp[.host]..> - Add port/pro/host for TLSA output
+  del-tlsa <certname> <_#._tcp[.host]..> - Delete port/pro/host for TLSA output
+  show-tlsa <certname>                   - Show port/pro/host for TLSA output
+  tlsa-current <certname...>             - Output TLSA RRs for the current key
+  tlsa-next <certname...>                - Output TLSA RRs for the next key
+  tlsa-check <certname...>               - Check that TLSA RRs are published
+  add-reload <certname> <service...>     - Add services to reload on rollover
+  del-reload <certname> <service...>     - Delete services to reload on rollover
+  show-reload <certname>                 - Show services to reload on rollover
+  reload <certname...>                   - Reload affected services
+  rollover <certname...>                 - Perform a key rollover
+  status                                 - Show current/next status
+
+DESCRIPTION
+
+Danectl provides a DANE-friendly Certbot workflow. For background, see:
+
+  https://en.wikipedia.org/wiki/DNS-based_Authentication_of_Named_Entities
+  https://community.letsencrypt.org/t/a-dane-friendly-certbot-workflow
+
+Danectl lets you create a pair of certbot certificate lineages to be used
+with DANE. They are referred to as the "original" and the "duplicate", or
+as the "current" and the "next". The current and next will repeatedly swap
+places between the original and the duplicate as the key rolls over from
+one to the other.
+
+If you already have a certbot certificate lineage, then instead of creating
+both certificate lineages, you can adopt the existing one for DANE use, so
+that you can start with your existing certificate lineage, and then just
+create the duplicate.
+
+You then configure danectl with the set of port/protocol/host combinations
+that you need TLSA records for. Danectl can then print out the TLSA records,
+in zonefile format, and you need to publish them to the DNS (somehow).
+Danectl can then check that the TLSA records have been published to the DNS.
+
+You also need to configure danectl with the list of services that need to be
+reloaded (by systemctl) when the key rolls over. This is needed even when
+certbot is configured to do it with deploy hooks, because those hooks are
+only run when a certificate is renewed. Service reloads also need to happen
+when there's a DANE key rollover, and that doesn't happen at the same time
+as automatic certbot certificate renewals.
+
+You then need to configure your services to use the current certificate in
+/etc/letsencrypt/current/<cert-name>, and then reload them.
+
+After that, certbot automatically renews certificates every three months,
+but the underlying keypair doesn't change, and the TLSA records can remain
+stable.
+
+Periodically, you can perform key rollovers on a schedule that suits you
+(e.g. annually). An emergency key rollover is exactly the same. At any time,
+you can show the status (which certificate lineages are current and which
+are next, and which TLSA records are not yet published).
+
+OPTIONS
+
+-h, --help
+
+Show a short help message.
+
+-V, --version
+
+Show the name and version.
+
+-v, --verbose
+
+Verbose mode. Print actions before performing them.
+
+-q, --quiet
+
+Quiet mode. Pass -q to certbot.
+
+-n, --test
+
+Test mode. Don't perform any changes. Implies verbose mode.
+
+COMMANDS
+
+Danectl can show you this help:
+
+  danectl help
+
+Before you can use danectl to do anything interesting, you might need to
+supply any command line options that certbot will need when it creates new
+certificate lineages. This is for authentication and installation. The
+default is "--apache" to use the Apache plugin. Don't use quotes and don't
+put spaces inside arguments. It won't end well.
+
+  danectl certbot --apache
+
+The "certbot" subcommand modifies your ~/.danectlrc file.
+
+If you already have a certbot certificate lineage, and want to adopt it for
+DANE use, it first needs to be converted to --reuse-key mode:
+
+  danectl adopt example.org
+
+Note that you must use the cert-name, not the list of certified domains.
+To see all of your cert-names, run "certbot certificates", or look in
+/etc/letsencrypt/live.
+
+This will create a symlink in /etc/letsencrypt/current to the adopted
+certificate lineage.
+
+If you want to create a new certbot certificate lineage for DANE instead:
+
+  danectl new example.org www.example.org mta-sts.example.org mail.example.org
+
+Note that you must provide the complete list of domain names to certify. The
+cert-name of the new certificate lineage will be the first domain in the list.
+
+This will create a symlink in /etc/letsencrypt/current to the new
+certificate lineage.
+
+Either way, you then need to create an additional duplicate certificate
+lineage for the same set of domains:
+
+  danectl dup example.org www.example.org mta-sts.example.org mail.example.org
+
+Note that you must provide the complete list of domain names to certify.
+It must be identical to the list of domains in the adopted or new original
+certificate lineage. The cert-name will be the first domain in the list
+followed by "-duplicate". You won't need to use that suffix with danectl,
+but you will need to use it when using certbot directly.
+
+This will create a symlink in /etc/letsencrypt/next to the duplicate
+certificate lineage.
+
+Most of the remaining subcommands below require the base cert-name as their
+first argument. Not the list of domain names, just the first domain, or
+cert-name, without any "-duplicate" suffix.
+
+To specify the port/protocol/host combinations that you will want TLSA
+records for:
+
+  danectl add-tlsa example.org _443._tcp _443._tcp.www _443._tcp.mta-sts
+  danectl add-tlsa example.org _25._tcp.mail _465._tcp.mail _587._tcp.mail
+  danectl add-tlsa example.org _110._tcp.mail _143._tcp.mail
+  danectl add-tlsa example.org _993._tcp.mail _995._tcp.mail
+
+They can also be removed:
+
+  danectl del-tlsa example.org _110._tcp.mail _143._tcp.mail
+
+The "add-tlsa" and "del-tlsa" subcommands modify your ~/.danectlrc file.
+
+You can also show which port/protocol/host combinations will be included
+for TLSA records:
+
+  danectl show-tlsa example.org
+
+To output all TLSA records for the current key:
+
+  danectl tlsa-current example.org
+
+To output all TLSA records for the next key:
+
+  danectl tlsa-next example.org
+
+Initially, you need to publish the TLSA records for both the current and
+next keys in the DNS (somehow).
+
+To check that all TLSA records for the current and next keys are published
+in the DNS:
+
+  danectl tlsa-check example.org
+
+All TLSA records for the current and next keys must be published in the DNS
+before you configure your services to use the current key.
+
+To specify the services that need to be reloaded when a key rolls over:
+
+  danectl add-reload example.org apache2 postfix dovecot
+
+They can also be removed:
+
+  danectl del-reload example.org postfix # Postfix can look after itself :-)
+
+The "add-reload" and "del-reload" subcommands modify your ~/.danectlrc file.
+
+You can also show which services will be reloaded:
+
+  danectl show-reload example.org
+
+At any point, you can reload the services that need to be reloaded when
+the key rolls over:
+
+  danectl reload example.org
+
+But this shouldn't be necessary. It's automatic when a key rolls over.
+Although it might be useful in certbot renewal hooks.
+
+Once a pair of certificate lineages are set up, certbot will automatically
+renew them both, but the underlying keypairs won't change. That means that
+the TLSA records can remain stable for longer than three months.
+
+Occasionally (e.g. annually), perform a key rollover:
+
+  danectl rollover example.org
+
+This will redesignate the next key as the current key, reload services with
+systemctl, and create a new keypair/certificate as the new next key. It
+also prints the old TLSA records for the old current key that you need to
+remove from the DNS (somehow). And it prints the new TLSA records for the
+new next key that you need to publish in the DNS (somehow).
+
+At any time, you can show the status of all certificate pairs:
+
+  danectl status
+
+This will show, for each base cert-name, which certificate lineage is
+current, and which is next. It will also show any TLSA records that should
+be, but are not, published in the DNS.
+
+If any of the symlinks in /etc/letsencrypt/{current,next} target certificate
+lineages that no longer exist in /etc/letsencrypt/line, this is also
+mentioned, and they are deleted. This indicates that the certificate lineage
+was previously deleted with certbot.
+
+You can also show the short aliases for all of the subcommands:
+
+  danectl aliases
+
+FILES
+
+  /etc/letsencrypt         - Certbot installation
+  /etc/letsencrypt/live    - Certificate lineages
+  /etc/letsencrypt/current - Current keypairs/certificates
+  /etc/letsencrypt/next    - Next keypairs/certificates
+  ~/.danectlrc             - Configuration for danectl
+
+The ~/.danectlrc configuration file is technically a shell script.
+But danectl's additions and removals are purely a single name="value"
+line at a time. Bear that in mind if you modify it manually.
+
+BUGS
+
+This isn't a bug. It's a choice. Danectl relies entirely on certbot. This
+choice was made so as to make danectl easy to implement, and because it's
+pragmatic. The same key can be used with DANE-aware or PKI-aware clients.
+You don't need to know which. And you don't need to exclude any clients.
+
+But it means that it only works with keys that are created by certbot, and
+with certificates that are issued by a Certificate Authority (CA). If you
+want to use DANE so as to avoid the CA ecosystem entirely, danectl won't
+help you do that.
+
+On the other hand, only a single CA is involved, LetsEncrypt, not the entire
+ecosystem, and danectl only generates TLSA 3 1 1 records, which only refer
+to the local public key itself. There is no reliance on any keys belonging
+to the CA. That's good because those keys can and will change on a schedule
+that is beyond your control. But your own keys are under your control.
+
+So danectl is opinionated and inflexible. Other things can be done with TLSA
+records, but they can't be done with danectl. But what can be done with
+danectl can be done easily. If you need greater flexibility, you'll need to
+find it elsewhere.
+
+CAVEAT
+
+If you need to add or remove any domains from a pair of certificate
+lineages, you will need to do it with certbot, and you will need to do it
+for both the original and the duplicate certificate lineages (e.g.
+example.org and example.org-duplicate), and you will need to use certbot's
+--cert-name command line option. Since there will be two certificate
+lineages with the same set of domains, it would be ambiguous otherwise.
+Perhaps danectl should be able to do this, but it doesn't. There may be
+other things that you will need to use certbot directly for. Keep things in
+sync.
+
+REQUIREMENTS
+
+Danectl requires /bin/sh, grep, sed, awk, perl, host, readlink, certbot,
+openssl, sha256sum, and systemctl (just for reload).
+
+LICENSE
+
+Danectl is released under the terms of the GPLv2+
+https://www.gnu.org/licenses/.
+
+SEE ALSO
+
+certbot(1), danebot(1), RFC6698, RFC7671, RFC7672.
+
+AUTHOR
+
+20210824 raf <raf@raf.org>
+
+URL
+
+  https://raf.org/danectl/
+  https://github.com/raforg/danectl/
+
+HELP
+	exit 0
+}
+
+die() { echo "$name: $@" >&2; exit 1; }
+
+# Supply certbot command line options
+
+certbot_options()
+{
+	local options="$@"
+	set_rc certbot_options "$options"
+}
+
+# Convert existing cert to reuse_key
+
+adopt()
+{
+	local certname="$@"
+	fname="$le/renewal/$certname.conf"
+	line="reuse_key = True"
+	[ -f "$fname" ] || die "adopt $certname: Failed to find renewal config file $fname"
+	[ -e "$le/current/$certname" -o -e "$le/next/$certname" ] && die "adopt $certname: Already adopted"
+	grep -q "$line" "$fname" && die "adopt $certname: Already in reuse_key mode"
+	add_line "$fname" "$line"
+	run ln -s "$le/live/$certname" "$le/current/$certname"
+}
+
+# Create a new original/current cert
+
+new()
+{
+	local certname="$1"
+	local domains="$@"
+	domains="`echo $domains | sed 's/ /,/g'`"
+	[ -d "$le/live/$certname" ] && die "new $certname: Already exists"
+	run certbot run$quiet ${certbot_options:---apache} --reuse-key -d "$domains"
+	[ $test = 0 -a $? != 0 ] && die "new $certname: certbot failed"
+	[ $test = 0 -a ! -d "$le/live/$certname" ] && die "new $certname: certbot failed"
+	run ln -s "$le/live/$certname" "$le/current/$certname"
+}
+
+# Create a new duplicate/next cert
+
+dup()
+{
+	local certname="$1"
+	local domains="$@"
+	domains="`echo $domains | sed 's/ /,/g'`"
+	[ ! -d "$le/live/$certname" ] && die "dup $certname: Failed to find live original $certname"
+	[ ! -d "$le/current/$certname" ] && die "dup $certname: Failed to find current original $certname"
+	[ -d "$le/live/$certname-duplicate" ] && die "dup $certname: Duplicate $certname-duplicate already exists"
+	run certbot certonly$quiet ${certbot_options:---apache} --duplicate --reuse-key --cert-name "$certname-duplicate" -d "$domains"
+	[ $test = 0 -a $? != 0 ] && die "dup $certname: certbot failed"
+	[ $test = 0 -a ! -d "$le/live/$certname-duplicate" ] && die "dup $certname: certbot failed"
+	run ln -s "$le/live/$certname-duplicate" "$le/next/$certname"
+}
+
+# Add port/pro/host for TLSA output
+
+add_tlsa()
+{
+	local certname="$1"; shift
+	shcertname="`shcertname $certname`"
+	eval tlsa="\$tlsa_$shcertname"
+	set_rc tlsa_$shcertname "$tlsa $@"
+}
+
+# Delete port/pro/host for TLSA output
+
+del_tlsa()
+{
+	local certname="$1"; shift
+	shcertname="`shcertname $certname`"
+	eval tlsa="\$tlsa_$shcertname"
+	for t in "$@"
+	do
+		tlsa="`echo $tlsa | remove_item \"$t\"`"
+	done
+	set_rc tlsa_$shcertname "$tlsa"
+}
+
+# Show port/pro/host for TLSA output
+
+show_tlsa()
+{
+	local certname="$1"; shift
+	shcertname="`shcertname $certname`"
+	eval tlsa="\$tlsa_$shcertname"
+	echo "$tlsa"
+}
+
+# Output TLSA RRs for the current/next key
+
+tlsa_role()
+{
+	local role="$1"
+	local certname="$2"
+	local label="$3"
+	shcertname="`shcertname $certname`"
+	eval tlsa="\$tlsa_$shcertname"
+	[ -z "$tlsa" ] && die "No TLSA records have been configured yet for $certname"
+	hash="`tlsa_hash $role $certname`"
+	echo "; $certname $label"
+	for t in $tlsa
+	do
+		echo "$t\tIN\tTLSA\t3 1 1 $hash"
+	done
+}
+
+# Output TLSA RRs for the current key
+
+tlsa_current()
+{
+	local certname="$1"
+	local label="${2:-current}"
+	tlsa_role current "$certname" "$label"
+}
+
+# Output TLSA RRs for the next key
+
+tlsa_next()
+{
+	local certname="$1"
+	local label="${2:-next}"
+	tlsa_role next "$certname" "$label"
+}
+
+# Check that TLSA RRs are published
+
+tlsa_check()
+{
+	local certname="$1"
+	shcertname="`shcertname $certname`"
+	eval tlsa="\$tlsa_$shcertname"
+	[ -z "$tlsa" ] && die "No TLSA records have been configured yet for $certname"
+	hash_current="`tlsa_hash current $certname`"
+	hash_next="`tlsa_hash next $certname`"
+	hash_current_short="`echo $hash_current | cut -c-50`"
+	hash_next_short="`echo $hash_next | cut -c-50`"
+	missing=0
+	for t in $tlsa
+	do
+		if host -t tlsa "$t.$certname" | grep -iq "$hash_current_short"
+		then
+			:
+		else
+			[ "$missing" = 0 ] && echo "; Missing:"
+			missing=1
+			echo "$t\tIN\tTLSA\t3 1 1 $hash_current ; current"
+		fi
+	done
+	for t in $tlsa
+	do
+		if host -t tlsa "$t.$certname" | grep -iq "$hash_next_short"
+		then
+			:
+		else
+			[ "$missing" = 0 ] && echo "; Missing:"
+			missing=1
+			echo "$t\tIN\tTLSA\t3 1 1 $hash_next ; next"
+		fi
+	done
+}
+
+# Add services to reload on rollover
+
+add_reload()
+{
+	local certname="$1"; shift
+	shcertname="`shcertname $certname`"
+	eval reload="\$reload_$shcertname"
+	set_rc reload_$shcertname "$reload $@"
+}
+
+# Delete services to reload on rollover
+
+del_reload()
+{
+	local certname="$1"; shift
+	shcertname="`shcertname $certname`"
+	eval reload="\$reload_$shcertname"
+	for t in "$@"
+	do
+		reload="`echo $reload | remove_item \"$t\"`"
+	done
+	set_rc reload_$shcertname "$reload"
+}
+
+# Show services to reload on rollover
+
+show_reload()
+{
+	local certname="$1"; shift
+	shcertname="`shcertname $certname`"
+	eval reload="\$reload_$shcertname"
+	echo "$reload"
+}
+
+# Reload affected services
+
+reload()
+{
+	local certname="$1"
+	shcertname="`shcertname $certname`"
+	eval reload="\$reload_$shcertname"
+	for service in $reload
+	do
+		run systemctl reload $service
+	done
+}
+
+# Perform a key rollover
+
+rollover()
+{
+	local certname="$1"
+	[ ! -d "$le/current/$certname" ] && die "rollover $certname: Failed to find current $certname"
+	[ ! -d "$le/next/$certname" ] && die "rollover $certname: Failed to find next $certname"
+	# Identify the transition: original to duplicate, or duplicate to original
+	if echo "`readlink \"$le/current/$certname\"`" | grep -q ".-duplicate"
+	then
+		curr="-duplicate"
+		next=""
+	else
+		curr=""
+		next="-duplicate"
+	fi
+	# Perform the key rollover
+	run rm "$le/next/$certname"
+	run rm "$le/current/$certname"
+    run ln -s "$le/live/$certname$next" "$le/current/$certname"
+    run ln -s "$le/live/$certname$curr" "$le/next/$certname"
+	reload "$certname"
+	# Swap $curr and $next
+	if [ "x$curr" = "x" ]
+	then
+		curr="-duplicate"
+		next=""
+	else
+		curr=""
+		next="-duplicate"
+	fi
+	# Show the old TLSA records that need to be removed from the DNS
+	echo "; Remove the following from the DNS"
+	tlsa_next "$certname" previous
+	# Create the new next keypair/certificate
+	del_line "$le/renewal/$certname$next.conf" "reuse_key ="
+	run certbot certonly$quiet ${certbot_options:---apache} --force-renewal --cert-name "$certname$next"
+	rc=$?
+	add_line "$le/renewal/$certname$next.conf" "reuse_key = True"
+	[ $test = 0 -a $rc != 0 ] && die "rollover $certname: certbot failed after the rollover! You must successfully run: certbot certonly --force-renewal --cert-name \"$certname$next\" (but first remove \"reuse_key = True\" from $le/renewal/$certname$next.conf and then put it back afterwards)"
+	# Show the new TLSA records that need to be published to the DNS
+	echo "; Publish the following in the DNS"
+	tlsa_next "$certname"
+}
+
+# Show status of all certificate pairs
+
+status()
+{
+	for role in current next
+	do
+		for symlink in "$le/$role"/*
+		do
+			certname="${symlink##*/}"
+			target="`readlink \"$symlink\"`"
+			note=; [ ! -d "$symlink" ] && note=" (deleted)" && run rm "$symlink"
+			echo "$certname: $role ${target##*/}$note"
+		done
+	done | sort
+	for symlink in "$le/current"/*
+	do
+		tlsa_check "${symlink##*/}"
+	done
+}
+
+# Output the public key hash for the given role and cert-name
+
+tlsa_hash()
+{
+	local role="$1"
+	local certname="$2"
+	cert="$le/$role/$certname/cert.pem"
+	echo "`openssl x509 -noout -pubkey -in \"$cert\" | openssl rsa -pubin -outform DER 2>/dev/null | sha256sum | sed 's/\s.*$//'`"
+}
+
+# Run a command unless testing, print it first if verbose
+
+run()
+{
+	[ $verbose = 1 ] && echo "$@"
+	[ $test = 0 ] && "$@"
+}
+
+# Add a line to a file unless testing, print it first if verbose
+
+add_line()
+{
+	local fname="$1"; shift
+	local line="$@";
+	line="`echo $line | sed -e 's/\s+/ /g' -e 's/^ //' -e 's/ $//'`"
+	[ $verbose = 1 ] && echo "Add \"$line\" to $fname"
+	[ $test = 0 ] && echo "$line" >> "$fname"
+}
+
+# Delete a line from a file unless testing, print it first if verbose
+
+del_line()
+{
+	local fname="$1"; shift
+	local line="$@";
+	[ $verbose = 1 ] && echo "Remove \"$line\" from $fname"
+	[ $test = 0 ] && perl -pi -e "s/^$line.*\\n//" "$fname"
+}
+
+# Add a line to ~/.danectlrc
+
+add_rc()
+{
+	[ -f $danectlrc ] || touch $danectlrc
+	add_line $danectlrc "$@"
+}
+
+# Delete a line from ~/.danectlrc
+
+del_rc()
+{
+	[ -f $danectlrc ] || touch $danectlrc
+	del_line $danectlrc "$@"
+}
+
+# Set or replace a variable in ~/.danectlrc
+
+set_rc()
+{
+	local name="$1"; shift
+	local value="$@"
+	value="`echo \"$value\" | sed -e 's/^ //'`"
+	del_rc "$name="
+	add_rc "$name=\"$value\""
+}
+
+# Remove something from a space-separated list (stdin/stdout)
+
+remove_item()
+{
+	local item="$1"
+	# Remove item at start or end or between spaces, then trim spaces
+	perl -pe 's/(?:^|\s+)\Q'"$item"'\E(?:\s+|$)/ /g; s/^\s+//; s/\s+$//; s/\s+/ /'
+}
+
+# Output a form of certname that is suitable for use in a shell variable identifier
+
+shcertname()
+{
+	local certname="$1"
+	echo $certname | sed 's/\./_/g'
+}
+
+# Check prerequisites
+
+check_prerequisites()
+{
+	[ -d $le ] || die "Failed to find $le"
+	for x in grep sed awk perl host readlink certbot openssl sha256sum systemctl
+	do
+		[ -x "/usr/bin/$x" ] || die "Failed to find /usr/bin/$x"
+	done
+}
+
+# Check cert-names
+
+check_certnames()
+{
+	for certname in "$@"
+	do
+		[ -d "$le/live/$certname" ] || die "Failed to find certname $certname"
+	done
+}
+
+# Check the base cert-name and the duplicate version
+
+check_both_certnames()
+{
+	for certname in "$@"
+	do
+		[ -d "$le/live/$certname" ] || die "Failed to find certname $certname"
+		[ -d "$le/live/$certname-duplicate" ] || die "Failed to find certname $certname-duplicate"
+	done
+}
+
+# Handle command line options
+
+[ $# = 0 ] && usage 0 | ${PAGER:-more}
+
+while :
+do
+	case "$1" in
+		-h|--help)
+			usage 0
+			;;
+		-V|--version)
+			echo "$name-$version"
+			exit 0
+			;;
+		-v|--verbose)
+			verbose=1
+			shift
+			;;
+		-q|--quiet)
+			quiet=' -q'
+			shift
+			;;
+		-n|--test)
+			verbose=1
+			test=1
+			shift
+			;;
+		-*)
+			die "Unknown option $1 (or unsupported option bundling)"
+			;;
+		*)
+			break
+			;;
+	esac
+done
+
+# Load the configuration
+
+[ -r "$danectlrc" ] && . "$danectlrc"
+
+# Create the current/next directories if necessary
+
+[ -d "$le" -a ! -d "$le/current" ] && mkdir "$le/current"
+[ -d "$le" -a ! -d "$le/next" ] && mkdir "$le/next"
+
+# Handle subcommands
+
+command="$1"
+shift
+
+case "$command" in
+	help|h)
+		help | ${PAGER:-more}
+		;;
+
+	certbot|c)
+		[ $# = 0 ] && usage 1 "Missing certbot argument(s)"
+		check_prerequisites
+		certbot_options "$@"
+		;;
+
+	adopt|ad)
+		[ $# = 0 ] && usage 1 "Missing adopt argument(s)"
+		check_prerequisites
+		check_certnames "$@"
+		for certname in "$@"; do adopt "$certname"; done
+		;;
+
+	new|original|n|o)
+		[ $# = 0 ] && usage 1 "Missing new argument(s)"
+		check_prerequisites
+		new "$@"
+		;;
+
+	dup|duplicate|d|next)
+		[ $# = 0 ] && usage 1 "Missing dup argument(s)"
+		check_prerequisites
+		dup "$@"
+		;;
+
+	add-tlsa|tlsa-add|at|ta)
+		[ $# -lt 2 ] && usage 1 "Missing add-tlsa argument(s)"
+		check_prerequisites
+		check_certnames "$1"
+		add_tlsa "$@"
+		;;
+
+	del-tlsa|delete-tlsa|tlsa-del|tlsa-delete|dt|td)
+		[ $# -lt 2 ] && usage 1 "Missing del-tlsa argument(s)"
+		check_prerequisites
+		check_certnames "$1"
+		del_tlsa "$@"
+		;;
+
+	show-tlsa|st)
+		[ $# != 1 ] && usage 1 "Missing show-tlsa argument"
+		check_prerequisites
+		check_certnames "$1"
+		show_tlsa "$@"
+		;;
+
+	tlsa-current|tc)
+		[ $# = 0 ] && usage 1 "Missing tlsa-current argument(s)"
+		check_prerequisites
+		check_certnames "$@"
+		for certname in "$@"; do tlsa_current "$certname"; done
+		;;
+
+	tlsa-next|tn)
+		[ $# = 0 ] && usage 1 "Missing tlsa-next argument(s)"
+		check_prerequisites
+		check_certnames "$@"
+		for certname in "$@"; do tlsa_next "$certname"; done
+		;;
+
+	tlsa-check|tch*|ch*)
+		[ $# = 0 ] && usage 1 "Missing tlsa-check argument(s)"
+		check_prerequisites
+		check_both_certnames "$@"
+		for certname in "$@"; do tlsa_check "$certname"; done
+		;;
+
+	add-reload|ar)
+		[ $# -lt 2 ] && usage 1 "Missing add-reload argument(s)"
+		check_prerequisites
+		check_certnames "$1"
+		add_reload "$@"
+		;;
+
+	del-reload|dr)
+		[ $# -lt 2 ] && usage 1 "Missing del-reload argument(s)"
+		check_prerequisites
+		check_certnames "$1"
+		del_reload "$@"
+		;;
+
+	show-reload|sr)
+		[ $# != 1 ] && usage 1 "Missing show-reload argument"
+		check_prerequisites
+		check_certnames "$1"
+		show_reload "$@"
+		;;
+
+	reload|r)
+		[ $# = 0 ] && usage 1 "Missing reload argument(s)"
+		check_prerequisites
+		check_certnames "$@"
+		for certname in "$@"; do reload "$certname"; done
+		;;
+
+	rollover|ro)
+		[ $# = 0 ] && usage 1 "Missing rollover argument(s)"
+		check_prerequisites
+		check_both_certnames "$@"
+		for certname in "$@"; do rollover "$certname"; done
+		;;
+
+	status|s)
+		check_prerequisites
+		status "$@"
+		;;
+
+	aliases|a):
+		echo "help: h"
+		echo "certbot: c"
+		echo "adopt: ad"
+		echo "new: original n o"
+		echo "dup: duplicate d next"
+		echo "add-tlsa: tlsa-add at ta"
+		echo "del-tlsa: delete-tlsa tlsa-del tlsa-delete dt td"
+		echo "show-tlsa: st"
+		echo "tlsa-current: tc"
+		echo "tlsa-next: tn"
+		echo "tlsa-check: tch* ch*"
+		echo "add-reload: ar"
+		echo "del-reload: dr"
+		echo "show-reload: sr"
+		echo "reload: r"
+		echo "rollover: ro"
+		echo "status: s"
+		echo "aliases: a"
+		;;
+
+	*)
+		die "Unknown subcommand: $command"
+		;;
+esac
+
+exit $?
+
+# vi:set ts=4 sw=4:

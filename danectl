@@ -674,6 +674,7 @@ status()
 	do
 		for symlink in "$le/$role"/*
 		do
+			[ -h "$symlink" ] || continue
 			certname="${symlink##*/}"
 			target="`readlink \"$symlink\"`"
 			note=; [ ! -d "$symlink" ] && note=" (deleted)" && run rm "$symlink"
@@ -682,6 +683,7 @@ status()
 	done | sort
 	for symlink in "$le/current"/*
 	do
+		[ -h "$symlink" ] || continue
 		tlsa_check "${symlink##*/}"
 	done
 }
@@ -774,10 +776,19 @@ shcertname()
 check_prerequisites()
 {
 	[ -d "$le" ] || die "Failed to find $le"
-	[ -r "$le/live" ] || die "Failed to read $le/live (use sudo)"
-	for x in grep sed awk perl host readlink certbot openssl sha256sum systemctl
+	[ -w "$le" ] || die "Unable to write to $le (use sudo)"
+	[ ! -d "$le/current" ] && mkdir "$le/current"
+	[ ! -d "$le/next" ] && mkdir "$le/next"
+
+	for cmd in grep sed awk perl host readlink certbot openssl sha256sum systemctl
 	do
-		[ -x "/usr/bin/$x" ] || die "Failed to find /usr/bin/$x"
+		found=0
+		for dir in `echo $PATH | sed 's/:/ /g'`
+		do
+			[ -x "$dir/$cmd" ] && found=1
+			[ $found = 1 ] && break
+		done
+		[ $found = 1 ] || die "Failed to find $cmd"
 	done
 }
 
@@ -841,11 +852,6 @@ done
 # Load the configuration
 
 [ -r "$danectlrc" ] && . "$danectlrc"
-
-# Create the current/next directories if necessary
-
-[ -d "$le" -a ! -d "$le/current" ] && mkdir "$le/current"
-[ -d "$le" -a ! -d "$le/next" ] && mkdir "$le/next"
 
 # Handle subcommands
 

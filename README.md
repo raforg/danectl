@@ -91,7 +91,7 @@ This will install:
 
 # REQUIREMENTS
 
-Danectl requires /bin/sh, grep, sed, awk, perl, pod2man, host, readlink, certbot,
+Danectl requires /bin/sh, grep, sed, awk, perl, host, readlink, certbot,
 openssl, sha256sum.
 
 --------------------------------------------------------------------------------

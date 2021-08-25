@@ -787,13 +787,7 @@ check_prerequisites()
 
 	for cmd in grep sed awk perl host readlink certbot openssl sha256sum
 	do
-		found=0
-		for dir in `echo $PATH | sed 's/:/ /g'`
-		do
-			[ -x "$dir/$cmd" ] && found=1
-			[ $found = 1 ] && break
-		done
-		[ $found = 1 ] || die "Failed to find $cmd"
+		case "`which $cmd`" in /*) ;; *) die "Failed to find $cmd";; esac
 	done
 }
 

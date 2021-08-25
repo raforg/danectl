@@ -222,7 +222,7 @@ certificate lineage.
 
 If you want to create a new certbot certificate lineage for DANE instead:
 
-  danectl new example.org www.example.org mta-sts.example.org mail.example.org
+  danectl new example.org www.example.org mail.example.org
 
 Note that you must provide the complete list of domain names to certify. The
 cert-name of the new certificate lineage will be the first domain in the list.
@@ -233,7 +233,7 @@ certificate lineage.
 Either way, you then need to create an additional duplicate certificate
 lineage for the same set of domains:
 
-  danectl dup example.org www.example.org mta-sts.example.org mail.example.org
+  danectl dup example.org www.example.org mail.example.org
 
 Note that you must provide the complete list of domain names to certify.
 It must be identical to the list of domains in the adopted or new original
@@ -251,7 +251,7 @@ cert-name, without any "-duplicate" suffix.
 To specify the port/protocol/host combinations that you will want TLSA
 records for:
 
-  danectl add-tlsa example.org _443._tcp _443._tcp.www _443._tcp.mta-sts
+  danectl add-tlsa example.org _443._tcp _443._tcp.www
   danectl add-tlsa example.org _25._tcp.mail _465._tcp.mail _587._tcp.mail
   danectl add-tlsa example.org _110._tcp.mail _143._tcp.mail
   danectl add-tlsa example.org _993._tcp.mail _995._tcp.mail

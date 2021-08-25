@@ -388,7 +388,7 @@ sync.
 
 REQUIREMENTS
 
-Danectl requires /bin/sh, grep, sed, awk, perl, host, readlink, certbot,
+Danectl requires /bin/sh, grep, sed, perl, host, readlink, certbot,
 openssl, sha256sum.
 
 LICENSE
@@ -671,7 +671,7 @@ rollover()
 	tlsa_next "$certname"
 }
 
-# Show status of all certificate pairs
+# Show current/next status
 
 status()
 {
@@ -776,7 +776,7 @@ shcertname()
 	echo "$certname" | sed 's/\./_/g'
 }
 
-# Check prerequisites
+# Check the prerequisites
 
 check_prerequisites()
 {
@@ -785,13 +785,13 @@ check_prerequisites()
 	[ ! -d "$le/current" ] && mkdir "$le/current"
 	[ ! -d "$le/next" ] && mkdir "$le/next"
 
-	for cmd in grep sed awk perl host readlink certbot openssl sha256sum
+	for cmd in grep sed perl host readlink certbot openssl sha256sum
 	do
 		case "`which $cmd`" in /*) ;; *) die "Failed to find $cmd";; esac
 	done
 }
 
-# Check cert-names
+# Check the cert-names
 
 check_certnames()
 {
@@ -812,7 +812,7 @@ check_both_certnames()
 	done
 }
 
-# Handle command line options
+# Handle any command line options
 
 [ $# = 0 ] && usage 0 | ${PAGER:-more}
 
@@ -848,11 +848,11 @@ do
 	esac
 done
 
-# Load the configuration
+# Load the configuration file
 
 [ -r "$danectlrc" ] && . "$danectlrc"
 
-# Handle subcommands
+# Handle the subcommands
 
 command="$1"
 shift

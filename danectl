@@ -140,12 +140,11 @@ Danectl lets you create a pair of certbot certificate lineages to be used
 with DANE. They are referred to as the "original" and the "duplicate", or
 as the "current" and the "next". The current and next will repeatedly swap
 places between the original and the duplicate as the key rolls over from
-one to the other.
+one to the other (with a new "next" key created after each rollover).
 
-If you already have a certbot certificate lineage, then instead of creating
-both certificate lineages, you can adopt the existing one for DANE use, so
-that you can start with your existing certificate lineage, and then just
-create the duplicate.
+If you already have a certbot certificate lineage that you want to use with
+DANE, then instead of creating both certificate lineages, you can adopt the
+existing one for DANE use, and then just create the duplicate.
 
 You then configure danectl with the set of port/protocol/host combinations
 that you need TLSA records for. Danectl can then print out the TLSA records,
@@ -159,7 +158,7 @@ only run when a certificate is renewed. Service reloads also need to happen
 when there's a DANE key rollover, and that doesn't happen at the same time
 as automatic certbot certificate renewals.
 
-You then need to configure your services to use the current certificate in
+You then need to configure your services to use the "current" certificate in
 /etc/letsencrypt/current/<cert-name>, and then reload them.
 
 After that, certbot automatically renews certificates every three months,

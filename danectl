@@ -658,7 +658,7 @@ rollover()
 	tlsa_next "$certname" previous
 	# Create the new next keypair/certificate
 	del_line "$le/renewal/$certname$next.conf" "reuse_key ="
-	run certbot certonly$quiet ${certbot_options:---apache} --force-renewal --cert-name "$certname$next"
+	run certbot renew$quiet --force-renewal --cert-name "$certname$next"
 	rc=$?
 	add_line "$le/renewal/$certname$next.conf" "reuse_key = True"
 	[ $test = 0 -a $rc != 0 ] && die "rollover $certname: certbot failed after the rollover! You must successfully run: certbot certonly --force-renewal --cert-name \"$certname$next\" (but first remove \"reuse_key = True\" from $le/renewal/$certname$next.conf and then put it back afterwards)"

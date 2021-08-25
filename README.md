@@ -47,7 +47,7 @@ Danectl can then check that the TLSA records have been published to the DNS.
     danectl tlsa-check example.org
 
 You also need to configure danectl with the list of services that need to be
-reloaded (by systemctl) when the key rolls over.
+reloaded when the key rolls over.
 
     danectl add-reload example.org apache2 postfix dovecot
     danectl del-reload example.org postfix
@@ -92,7 +92,7 @@ This will install:
 # REQUIREMENTS
 
 Danectl requires /bin/sh, grep, sed, awk, perl, pod2man, host, readlink, certbot,
-openssl, sha256sum, and systemctl (just for reload).
+openssl, sha256sum.
 
 --------------------------------------------------------------------------------
 

@@ -152,11 +152,11 @@ in zonefile format, and you need to publish them to the DNS (somehow).
 Danectl can then check that the TLSA records have been published to the DNS.
 
 You also need to configure danectl with the list of services that need to be
-reloaded (by systemctl) when the key rolls over. This is needed even when
-certbot is configured to do it with deploy hooks, because those hooks are
-only run when a certificate is renewed. Service reloads also need to happen
-when there's a DANE key rollover, and that doesn't happen at the same time
-as automatic certbot certificate renewals.
+reloaded when the key rolls over. This is needed even when certbot is
+configured to do it with deploy hooks, because those hooks are only run when
+a certificate is renewed. Service reloads also need to happen when there's a
+DANE key rollover, and that doesn't happen at the same time as automatic
+certbot certificate renewals.
 
 You then need to configure your services to use the "current" certificate in
 /etc/letsencrypt/current/<cert-name>, and then reload them.
@@ -316,11 +316,11 @@ Occasionally (e.g. annually), perform a key rollover:
 
   danectl rollover example.org
 
-This will redesignate the next key as the current key, reload services with
-systemctl, and create a new keypair/certificate as the new next key. It
-also prints the old TLSA records for the old current key that you need to
-remove from the DNS (somehow). And it prints the new TLSA records for the
-new next key that you need to publish in the DNS (somehow).
+This will redesignate the next key as the current key, reload services, and
+create a new keypair/certificate as the new next key. It also prints the old
+TLSA records for the old current key that you need to remove from the DNS
+(somehow). And it prints the new TLSA records for the new next key that you
+need to publish in the DNS (somehow).
 
 At any time, you can show the status of all certificate pairs:
 
@@ -389,7 +389,7 @@ sync.
 REQUIREMENTS
 
 Danectl requires /bin/sh, grep, sed, awk, perl, host, readlink, certbot,
-openssl, sha256sum, and systemctl (just for reload).
+openssl, sha256sum.
 
 LICENSE
 
@@ -617,7 +617,12 @@ reload()
 	eval reload="\$reload_$shcertname"
 	for service in $reload
 	do
-		run systemctl reload "$service"
+		case "`which systemctl`" in /*) run systemctl reload "$service"; continue;; esac
+		case "`which service`" in /*) run service "$service" reload; continue;; esac
+		if [ -x /etc/init.d/"$service" ]; then run /etc/init.d/"$service" reload; continue; fi
+		if [ -x /etc/init.d/"$service" ]; then run /etc/init.d/"$service" reload; continue; fi
+		if [ -x /etc/rc.d/"$service" ]; then run /etc/rc.d/"$service" reload; continue; fi
+		if [ -x /usr/local/etc/rc.d/"$service" ]; then run /usr/local/etc/rc.d/"$service" reload; continue; fi
 	done
 }
 
@@ -780,7 +785,7 @@ check_prerequisites()
 	[ ! -d "$le/current" ] && mkdir "$le/current"
 	[ ! -d "$le/next" ] && mkdir "$le/next"
 
-	for cmd in grep sed awk perl host readlink certbot openssl sha256sum systemctl
+	for cmd in grep sed awk perl host readlink certbot openssl sha256sum
 	do
 		found=0
 		for dir in `echo $PATH | sed 's/:/ /g'`

@@ -1,0 +1,27 @@
+CHANGELOG
+=========
+
+0.2 (20210825)
+
+    - Check for root privileges early
+    - More command aliases
+    - Add missing aliases command to manpage synopsis
+    - After rollover, use certbot renew (not certonly) in case there are any pre/post hooks
+    - Add examples to README.md (and minor changes to DESCRIPTION)
+    - Improve prerequisite checks
+    - Remove systemctl prerequisite
+    - Remove pod2man installation prerequisite
+    - Minor documentation improvements
+
+0.1 (20210824)
+
+    - Initial version
+
+--------------------------------------------------------------------------------
+
+    URL: https://raf.org/danectl
+    GIT: https://github.com/raforg/danectl
+    Date: 20210825
+    Author: raf <raf@raf.org>
+
+

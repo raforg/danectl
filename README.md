@@ -80,8 +80,8 @@ and which are next, and which TLSA records are not yet published).
 
 To install danectl
 
-    tar xzf danectl-0.1.tar.gz
-    cd danectl-0.1
+    tar xzf danectl-0.2.tar.gz
+    cd danectl-0.2
     make install
 
 This will install:
@@ -98,6 +98,6 @@ openssl, sha256sum.
 
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
-    Date: 20210824
+    Date: 20210825
     Author: raf <raf@raf.org>
 

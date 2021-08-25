@@ -665,7 +665,7 @@ rollover()
 	run certbot renew$quiet --force-renewal --cert-name "$certname$next"
 	rc=$?
 	add_line "$le/renewal/$certname$next.conf" "reuse_key = True"
-	[ $test = 0 -a $rc != 0 ] && die "rollover $certname: certbot failed after the rollover! You must successfully run: certbot certonly --force-renewal --cert-name \"$certname$next\" (but first remove \"reuse_key = True\" from $le/renewal/$certname$next.conf and then put it back afterwards)"
+	[ $test = 0 -a $rc != 0 ] && die "rollover $certname: certbot failed after the rollover! You must successfully run: certbot renew --force-renewal --cert-name \"$certname$next\" (but first remove \"reuse_key = True\" from $le/renewal/$certname$next.conf and then put it back afterwards)"
 	# Show the new TLSA records that need to be published to the DNS
 	echo "; Publish the following in the DNS"
 	tlsa_next "$certname"

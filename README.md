@@ -91,8 +91,8 @@ This will install:
 
 # REQUIREMENTS
 
-Danectl requires /bin/sh, grep, sed, perl, host, readlink, certbot,
-openssl, sha256sum.
+Danectl requires /bin/sh, grep, cut, sed, host, readlink, certbot, openssl,
+sha256sum.
 
 --------------------------------------------------------------------------------
 

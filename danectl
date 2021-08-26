@@ -390,8 +390,8 @@ sync.
 
 REQUIREMENTS
 
-Danectl requires /bin/sh, grep, sed, perl, host, readlink, certbot,
-openssl, sha256sum.
+Danectl requires /bin/sh, grep, cut, sed, host, readlink, certbot, openssl,
+sha256sum.
 
 LICENSE
 
@@ -743,7 +743,9 @@ del_line()
 	local fname="$1"; shift
 	local line="$@";
 	[ $verbose = 1 ] && echo "Remove \"$line\" from $fname"
-	[ $test = 0 ] && perl -pi -e "s/^$line.*\\n//" "$fname"
+	[ $test = 1 ] && return
+	grep -v "^$line" "$fname" > "$fname.tmp.$$"
+	mv "$fname.tmp.$$" "$fname"
 }
 
 # Add a line to ~/.danectlrc
@@ -778,8 +780,7 @@ set_rc()
 remove_item()
 {
 	local item="$1"
-	# Remove item at start or end or between spaces, then trim spaces
-	perl -pe 's/(?:^|\s+)\Q'"$item"'\E(?:\s+|$)/ /g; s/^\s+//; s/\s+$//; s/\s+/ /'
+	echo `sed 's/ /\n/g' | grep -v "$item"`
 }
 
 # Output a form of certname that is suitable for use in a shell variable identifier
@@ -799,7 +800,7 @@ check_prerequisites()
 	[ ! -d "$le/current" ] && mkdir "$le/current"
 	[ ! -d "$le/next" ] && mkdir "$le/next"
 
-	for cmd in grep sed perl host readlink certbot openssl sha256sum
+	for cmd in grep cut sed host readlink certbot openssl sha256sum
 	do
 		case "`which $cmd`" in /*) ;; *) die "Failed to find $cmd";; esac
 	done

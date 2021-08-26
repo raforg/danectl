@@ -81,7 +81,7 @@ Copyright (C) 2021 raf <raf@raf.org>
 
 This is free software released under the terms of the GPLv2+:
 
-  https://www.gnu.org/licenses/
+  https://www.gnu.org/licenses
 
 There is no warranty; not even for merchantability or fitness
 for a particular purpose.
@@ -283,7 +283,7 @@ in the DNS:
 
   danectl tlsa-check example.org
 
-If no certname is supplied, then all certnames are checked.
+If no cert-name is supplied, then all cert-names are checked.
 
 All TLSA records for the current and next keys must be published in the DNS
 before you configure your services to use the current key.
@@ -333,7 +333,7 @@ current, and which is next. It will also show any TLSA records that should
 be, but are not, published in the DNS.
 
 If any of the symlinks in /etc/letsencrypt/{current,next} target certificate
-lineages that no longer exist in /etc/letsencrypt/line, this is also
+lineages that no longer exist in /etc/letsencrypt/live, this is also
 mentioned, and they are deleted. This indicates that the certificate lineage
 was previously deleted with certbot.
 
@@ -396,7 +396,7 @@ sha256sum.
 LICENSE
 
 Danectl is released under the terms of the GPLv2+
-https://www.gnu.org/licenses/.
+https://www.gnu.org/licenses.
 
 SEE ALSO
 
@@ -408,8 +408,8 @@ AUTHOR
 
 URL
 
-  https://raf.org/danectl/
-  https://github.com/raforg/danectl/
+  https://raf.org/danectl
+  https://github.com/raforg/danectl
 
 HELP
 	exit 0

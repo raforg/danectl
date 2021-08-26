@@ -58,7 +58,7 @@ reloads also need to happen when there's a DANE key rollover, and that
 doesn't happen at the same time as automatic certbot certificate renewals.
 
 You then need to configure your services to use the "current" certificate in
-/etc/letsencrypt/current/<cert-name>, and then reload them.
+/etc/letsencrypt/current, and then reload them.
 
     Left as an exercise for the reader
 
@@ -78,7 +78,7 @@ and which are next, and which TLSA records are not yet published).
 
 # INSTALL
 
-To install danectl
+To install danectl:
 
     tar xzf danectl-0.3.tar.gz
     cd danectl-0.3

@@ -55,7 +55,7 @@ commands:
  show-tlsa <certname>                    - Show port/pro/host for TLSA output
  tlsa-current <certname...>              - Output TLSA RRs for the current key
  tlsa-next <certname...>                 - Output TLSA RRs for the next key
- tlsa-check <certname...>                - Check that TLSA RRs are published
+ tlsa-check [<certname...>]              - Check that TLSA RRs are published
  add-reload <certname> <service...>      - Add services to reload on rollover
  del-reload <certname> <service...>      - Delete services to reload on rollover
  show-reload <certname>                  - Show services to reload on rollover
@@ -120,7 +120,7 @@ SYNOPSIS
   show-tlsa <certname>                   - Show port/pro/host for TLSA output
   tlsa-current <certname...>             - Output TLSA RRs for the current key
   tlsa-next <certname...>                - Output TLSA RRs for the next key
-  tlsa-check <certname...>               - Check that TLSA RRs are published
+  tlsa-check [<certname...>]             - Check that TLSA RRs are published
   add-reload <certname> <service...>     - Add services to reload on rollover
   del-reload <certname> <service...>     - Delete services to reload on rollover
   show-reload <certname>                 - Show services to reload on rollover
@@ -282,6 +282,8 @@ To check that all TLSA records for the current and next keys are published
 in the DNS:
 
   danectl tlsa-check example.org
+
+If no certname is supplied, then all certnames are checked.
 
 All TLSA records for the current and next keys must be published in the DNS
 before you configure your services to use the current key.
@@ -812,6 +814,21 @@ check_both_certnames()
 	done
 }
 
+# Output all DANE certnames
+
+all_certnames()
+{
+	for symlink in "$le"/current/*
+	do
+		[ -h "$symlink" ] || continue
+		certname="${symlink##*/}"
+		target="`readlink \"$symlink\"`"
+		[ ! -d "$symlink" ] && continue
+		[ ! -d "$le/next/$certname" ] && continue
+		echo "$certname"
+	done
+}
+
 # Handle any command line options
 
 [ $# = 0 ] && usage 0 | ${PAGER:-more}
@@ -923,10 +940,9 @@ case "$command" in
 		;;
 
 	tlsa-check|tch*|ch*)
-		[ $# = 0 ] && usage 1 "Missing tlsa-check argument(s)"
 		check_prerequisites
-		check_both_certnames "$@"
-		for certname in "$@"; do tlsa_check "$certname"; done
+		[ $# != 0 ] && check_both_certnames "$@"
+		for certname in ${*:-`all_certnames`}; do tlsa_check "$certname"; done
 		;;
 
 	add-reload|reload-add|ar|ra)

@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+0.3.1 (20210826)
+
+    - Minor documentation improvements
+
 0.3 (20210826)
 
     - Updated certbot renew failure message

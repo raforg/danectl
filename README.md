@@ -80,8 +80,8 @@ and which are next, and which TLSA records are not yet published).
 
 To install danectl:
 
-    tar xzf danectl-0.3.tar.gz
-    cd danectl-0.3
+    tar xzf danectl-0.3.1.tar.gz
+    cd danectl-0.3.1
     make install
 
 This will install:

@@ -19,7 +19,7 @@
 # 20210826 raf <raf@raf.org>
 
 name=danectl
-version=0.3
+version=0.3.1
 date=20210826
 
 # Some defaults

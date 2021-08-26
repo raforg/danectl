@@ -1,6 +1,14 @@
 CHANGELOG
 =========
 
+0.3 (20210826)
+
+    - Updated certbot renew failure message
+    - Change tlsa-check with no certname to check all certnames
+    - More/better command aliases
+    - Add tlsa-check for extra records that should be deleted
+    - Remove perl prerequisite
+
 0.2 (20210825)
 
     - Check for root privileges early
@@ -21,7 +29,7 @@ CHANGELOG
 
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
-    Date: 20210825
+    Date: 20210826
     Author: raf <raf@raf.org>
 
 

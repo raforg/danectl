@@ -60,10 +60,10 @@ install-man: $(DANECTL_MANFILES)
 	install -m 644 $(DANECTL_MANFILES) $(APP_MANDIR)
 
 %.$(APP_MANSECT): %
-	$< help | perl -pe 's/^([A-Z ]+)$$/=head1 $$1/' | pod2man --section='$(APP_MANSECT)' --center='$(APP_MANSECTNAME)' --name='$(shell echo $(DANECTL_NAME) | tr a-z A-Z)' --release='$(DANECTL_ID)' --date='$(DANECTL_DATE)' --quotes=none > $@
+	./$< help | perl -pe 's/^([A-Z ]+)$$/=head1 $$1/' | pod2man --section='$(APP_MANSECT)' --center='$(APP_MANSECTNAME)' --name='$(shell echo $(DANECTL_NAME) | tr a-z A-Z)' --release='$(DANECTL_ID)' --date='$(DANECTL_DATE)' --quotes=none > $@
 
 %.$(APP_MANSECT).html: %
-	$< help | perl -pe 's/^([A-Z ]+)$$/=head1 $$1/' | pod2html --noindex --title='$(DANECTL_NAME)($(APP_MANSECT))' > $@ 2>/dev/null
+	./$< help | perl -pe 's/^([A-Z ]+)$$/=head1 $$1/' | pod2html --noindex --title='$(DANECTL_NAME)($(APP_MANSECT))' > $@ 2>/dev/null
 	rm -r pod2htm*.tmp
 
 clean:

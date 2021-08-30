@@ -637,6 +637,7 @@ reload()
 	do
 		case "`which systemctl`" in /*) run systemctl reload "$service"; continue;; esac
 		case "`which service`" in /*) run service "$service" reload; continue;; esac
+		case "`which rcctl`" in /*) run rcctl reload "$service"; continue;; esac
 		if [ -x /etc/init.d/"$service" ]; then run /etc/init.d/"$service" reload; continue; fi
 		if [ -x /etc/rc.d/"$service" ]; then run /etc/rc.d/"$service" reload; continue; fi
 		if [ -x /usr/local/etc/rc.d/"$service" ]; then run /usr/local/etc/rc.d/"$service" reload; continue; fi

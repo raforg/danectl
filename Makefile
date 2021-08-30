@@ -17,7 +17,7 @@
 # along with this program; if not, see <https://www.gnu.org/licenses/>.
 #
 
-# 20210826 raf <raf@raf.org>
+# 20210830 raf <raf@raf.org>
 
 DESTDIR :=
 PREFIX := $(DESTDIR)/usr/local
@@ -30,8 +30,8 @@ APP_MANDIR := $(MAN_INSDIR)/man$(APP_MANSECT)
 APP_MANSECTNAME := User Commands
 
 DANECTL_NAME=danectl
-DANECTL_VERSION=0.3.1
-DANECTL_DATE=20210826
+DANECTL_VERSION=0.3.2
+DANECTL_DATE=20210830
 DANECTL_ID=$(DANECTL_NAME)-$(DANECTL_VERSION)
 DANECTL_DIST=$(DANECTL_ID).tar.gz
 DANECTL_MANFILES=$(DANECTL_NAME).$(APP_MANSECT)

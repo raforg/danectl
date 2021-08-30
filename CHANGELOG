@@ -1,6 +1,17 @@
 CHANGELOG
 =========
 
+0.3.2 (20210830)
+
+    - Makefile - Use danectl in cwd to make the manpage
+    - Changed one line description and rewrote introduction
+    - Added COPYING
+    - Remove redundant extra /etc/init.d check
+    - Add check for rcctl for reloading services on OpenBSD
+    - Check ~/.danectlrc ownership and permissions before executing it
+    - Add CODE_OF_CONDUCT.md
+    - Add .gitignore
+
 0.3.1 (20210826)
 
     - Minor documentation improvements
@@ -33,7 +44,7 @@ CHANGELOG
 
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
-    Date: 20210826
+    Date: 20210830
     Author: raf <raf@raf.org>
 
 

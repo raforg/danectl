@@ -80,8 +80,8 @@ and which are next, and which TLSA records are not yet published).
 
 To install danectl:
 
-    tar xzf danectl-0.3.1.tar.gz
-    cd danectl-0.3.1
+    tar xzf danectl-0.3.2.tar.gz
+    cd danectl-0.3.2
     make install
 
 This will install:
@@ -89,15 +89,19 @@ This will install:
     /usr/local/bin/danectl
     /usr/local/share/man/man1/danectl.1
 
+To install under /usr instead:
+
+    make PREFIX=/usr install
+
 # REQUIREMENTS
 
-Danectl requires /bin/sh, grep, cut, sed, host, readlink, certbot, openssl,
+Danectl requires /bin/sh, ls, cut, sed, grep, host, readlink, certbot, openssl,
 sha256sum.
 
 --------------------------------------------------------------------------------
 
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
-    Date: 20210826
+    Date: 20210830
     Author: raf <raf@raf.org>
 

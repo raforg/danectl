@@ -30,6 +30,7 @@ verbose=0
 quiet=
 le=/etc/letsencrypt
 danectlrc="$HOME/.danectlrc"
+umask 022
 
 # The short -h --help usage message
 
@@ -806,10 +807,23 @@ check_prerequisites()
 	[ ! -d "$le/current" ] && mkdir "$le/current"
 	[ ! -d "$le/next" ] && mkdir "$le/next"
 
-	for cmd in grep cut sed host readlink certbot openssl sha256sum
+	for cmd in ls cut sed grep host readlink certbot openssl sha256sum
 	do
 		case "`which $cmd`" in /*) ;; *) die "Failed to find $cmd";; esac
 	done
+
+	if [ -e "$danectlrc" ]
+	then
+		[ ! -O "$danectlrc" ] && die "$danectlrc is not owned by root"
+		case "`ls -lL \"$danectlrc\" | cut -c-10`" in
+			-rw-r--r--|-rw-r-----|-rw-------)
+				;;
+			*)
+				die "$danectlrc is group- or world-writable"
+				;;
+		esac
+		. "$danectlrc"
+	fi
 }
 
 # Check the cert-names
@@ -883,10 +897,6 @@ do
 			;;
 	esac
 done
-
-# Load the configuration file
-
-[ -r "$danectlrc" ] && . "$danectlrc"
 
 # Handle the subcommands
 

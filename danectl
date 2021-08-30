@@ -133,9 +133,9 @@ SYNOPSIS
 DESCRIPTION
 
 Danectl is a DNSSEC DANE implementation manager. It uses certbot to create
-and manage pairs of keys for use with a TLSA 3 1 1 current + next workflow.
+and manage a pair of keys for use with a TLSA 3 1 1 current + next workflow.
 It generates TLSA records for your TLS services for you to publish to the DNS,
-checks that they have been published, and performs key rollovers.
+checks that they are correctly published, and performs key rollovers.
 
 Danectl lets you create a pair of certbot certificate lineages to be used
 with DANE. They are referred to as the "original" and the "duplicate", or

@@ -395,8 +395,8 @@ sync.
 
 REQUIREMENTS
 
-Danectl requires /bin/sh, grep, cut, sed, host, readlink, certbot, openssl,
-sha256sum.
+Danectl requires /bin/sh, ls, cut, sed, grep, host, readlink, certbot,
+openssl, sha256sum.
 
 LICENSE
 

@@ -1,15 +1,15 @@
 # README
 
-*danectl* - a DANE-friendly Certbot workflow
+*danectl* - DNSSEC DANE implementation manager
 
+# INTRODUCTION
+
+*Danectl* is a DNSSEC DANE implementation manager. It uses *certbot* to create
+and manage pairs of keys for use with a TLSA 3 1 1 current + next workflow.
+It generates TLSA records for your TLS services for you to publish to the DNS,
+checks that they are correctly published, and performs key rollovers.
 
 # DESCRIPTION
-
-*Danectl* provides a DANE-friendly Certbot workflow. For background, see:
-
-[https://en.wikipedia.org/wiki/DNS-based_Authentication_of_Named_Entities](https://en.wikipedia.org/wiki/DNS-based_Authentication_of_Named_Entities)
-
-[https://community.letsencrypt.org/t/a-dane-friendly-certbot-workflow](https://community.letsencrypt.org/t/a-dane-friendly-certbot-workflow)
 
 Danectl lets you create a pair of certbot certificate lineages to be used
 with DANE. They are referred to as the "original" and the "duplicate", or

@@ -8,6 +8,7 @@ CHANGELOG
     - Added COPYING
     - Remove redundant extra /etc/init.d check
     - Add check for rcctl for reloading services on OpenBSD
+    - Add error message when unable to reload services
     - Check ~/.danectlrc ownership and permissions before executing it
     - Add CODE_OF_CONDUCT.md
     - Add .gitignore

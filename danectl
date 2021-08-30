@@ -420,6 +420,7 @@ HELP
 }
 
 die() { echo "$name: $@" >&2; exit 1; }
+warn() { echo "$name: $@" >&2; }
 
 # Supply certbot command line options
 
@@ -641,6 +642,7 @@ reload()
 		if [ -x /etc/init.d/"$service" ]; then run /etc/init.d/"$service" reload; continue; fi
 		if [ -x /etc/rc.d/"$service" ]; then run /etc/rc.d/"$service" reload; continue; fi
 		if [ -x /usr/local/etc/rc.d/"$service" ]; then run /usr/local/etc/rc.d/"$service" reload; continue; fi
+		warn "Unable to reload $service"
 	done
 }
 

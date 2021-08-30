@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+0.4 (20210830)
+
+    - Add SSHFP (sshfp and sshfp-check subcommands)
+    - Add ls to list of requirements in manpage
+
 0.3.2 (20210830)
 
     - Makefile - Use danectl in cwd to make the manpage

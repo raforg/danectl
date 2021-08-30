@@ -8,6 +8,7 @@
 and manage pairs of keys for use with a TLSA 3 1 1 current + next workflow.
 It generates TLSA records for your TLS services for you to publish to the DNS,
 checks that they are correctly published, and performs key rollovers.
+*Danectl* can generate and check SSHFP records for the local SSH server as well.
 
 # DESCRIPTION
 
@@ -95,8 +96,10 @@ To install under /usr instead:
 
 # REQUIREMENTS
 
-Danectl requires /bin/sh, ls, cut, sed, grep, host, readlink, certbot, openssl,
-sha256sum.
+For TLSA usage, danectl requires /bin/sh, ls, cut, sed, grep, host,
+readlink, certbot, openssl, sha256sum.
+
+For SSHFP usage, danectl requires /bin/sh, sed, host, perl, ssh-keygen.
 
 --------------------------------------------------------------------------------
 

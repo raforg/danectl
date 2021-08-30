@@ -64,12 +64,15 @@ commands:
  reload <certname...>                    - Reload affected services
  rollover <certname...>                  - Perform a key rollover
  status                                  - Show current/next status
+ sshfp                                   - Output SSHFP RRs for localhost
+ sshfp-check                             - Check that SSHFP RRs are published
  aliases                                 - Show subcommand aliases
 
 Danectl is a DNSSEC DANE implementation manager. It uses certbot to create
 and manage a pair of keys for use with a TLSA 3 1 1 current + next workflow.
 It generates TLSA records for your TLS services for you to publish to the DNS,
 checks that they are correctly published, and performs key rollovers.
+Danectl can generate and check SSHFP records for the local SSH server as well.
 Read "danectl help" for more information.
 
 Name: $name
@@ -129,6 +132,8 @@ SYNOPSIS
   reload <certname...>                   - Reload affected services
   rollover <certname...>                 - Perform a key rollover
   status                                 - Show current/next status
+  sshfp                                  - Output SSHFP RRs for localhost
+  sshfp-check                            - Check that SSHFP RRs are published
   aliases                                - Show subcommand aliases
 
 DESCRIPTION
@@ -137,6 +142,7 @@ Danectl is a DNSSEC DANE implementation manager. It uses certbot to create
 and manage a pair of keys for use with a TLSA 3 1 1 current + next workflow.
 It generates TLSA records for your TLS services for you to publish to the DNS,
 checks that they are correctly published, and performs key rollovers.
+Danectl can generate and check SSHFP records for the local SSH server as well.
 
 Danectl lets you create a pair of certbot certificate lineages to be used
 with DANE. They are referred to as the "original" and the "duplicate", or
@@ -339,12 +345,26 @@ lineages that no longer exist in /etc/letsencrypt/live, this is also
 mentioned, and they are deleted. This indicates that the certificate lineage
 was previously deleted with certbot.
 
+You can also output SSHFP records for the local SSH server:
+
+  danectl sshfp example.org
+
+If you want to authorize your local SSH server's host keys to clients via
+DNSSEC, you need to publish these SSHFP records in the DNS (somehow). You
+will also need to set VerifyHostKeyDNS to yes or ask in the ssh client
+configuration.
+
+To check that SSHFP records for the local SSH server are published in the
+DNS:
+
+  danectl sshfp-check example.org
+
 You can also show the short aliases for all of the subcommands:
 
   danectl aliases
 
 Note that short aliases are subject to change, and so should only be used
-interactively, not in scripts or cronjobs.
+interactively. Use the full documented names for scripts and cronjobs.
 
 FILES
 
@@ -395,8 +415,10 @@ sync.
 
 REQUIREMENTS
 
-Danectl requires /bin/sh, ls, cut, sed, grep, host, readlink, certbot,
-openssl, sha256sum.
+For TLSA usage, danectl requires /bin/sh, ls, cut, sed, grep, host,
+readlink, certbot, openssl, sha256sum.
+
+For SSHFP usage, danectl requires /bin/sh, sed, host, perl, ssh-keygen.
 
 LICENSE
 
@@ -405,7 +427,7 @@ https://www.gnu.org/licenses.
 
 SEE ALSO
 
-certbot(1), danebot(1), RFC6698, RFC7671, RFC7672.
+certbot(1), danebot(1), ssh_config(5), RFC6698, RFC7671, RFC7672, RFC4255.
 
 AUTHOR
 
@@ -862,6 +884,47 @@ all_certnames()
 	done
 }
 
+# Check the prerequisites for SSHFP
+
+check_sshfp_prerequisites()
+{
+	for cmd in sed host perl ssh-keygen
+	do
+		case "`which $cmd`" in /*) ;; *) die "Failed to find $cmd";; esac
+	done
+}
+
+# Output SSHFP RRs for the current host
+
+sshfp_current()
+{
+	local hostname="$1"
+	ssh-keygen -r "$hostname" | sed -e 's/ /\t/' -e 's/ /\t/' -e 's/ /\t/'
+}
+
+# Check that SSHFP RRs are published
+
+sshfp_check()
+{
+	local hostname="$1"
+	perl -e '
+		use strict;
+		use warnings;
+		my %current = map { $_ =~ /SSHFP (\d+ \d+ \S+)$/; ($1, 1) } split /\n/, `ssh-keygen -r "'"$hostname"'"`;
+		my %published = map { $_ =~ /SSHFP record (\d+ \d+ \S+)(?:\s+(\S+))?$/; (lc($1 . ($2 // "")), 1) } grep { /has SSHFP record/ } split /\n/, `host -t sshfp "'"$hostname"'"`;
+		my $missing = 0;
+		for my $sshfp (sort keys %current)
+		{
+			print(($missing ? "" : "; Missing '"$hostname"' sshfp (must be published)\n"), "'"$hostname"'\tIN\tSSHFP\t$sshfp\n"), $missing = 1 if !exists $published{$sshfp};
+		}
+		my $extraneous = 0;
+		for my $sshfp (sort keys %published)
+		{
+			print(($extraneous ? "" : "; Extraneous '"$hostname"' sshfp (should be removed)\n"), "'"$hostname"'\tIN\tSSHFP\t$sshfp\n"), $extraneous = 1 if !exists $current{$sshfp};
+		}
+	'
+}
+
 # Handle any command line options
 
 [ $# = 0 ] && usage 0 | ${PAGER:-more}
@@ -1014,6 +1077,18 @@ case "$command" in
 		status "$@"
 		;;
 
+	sshfp|ssh)
+		[ $# != 1 ] && usage 1 "Missing sshfp argument"
+		check_sshfp_prerequisites
+		sshfp_current "$@"
+		;;
+
+	sshfp-check|check-sshfp|ssh-check|check-ssh|sch|schk)
+		[ $# != 1 ] && usage 1 "Missing sshfp-check argument"
+		check_sshfp_prerequisites
+		sshfp_check "$@"
+		;;
+
 	aliases|a):
 		echo "help: h"
 		echo "certbot: c"
@@ -1032,6 +1107,8 @@ case "$command" in
 		echo "reload: r"
 		echo "rollover: ro"
 		echo "status: s"
+		echo "sshfp: ssh"
+		echo "sshfp-check: check-sshfp ssh-check check-ssh sch schk"
 		echo "aliases: a"
 		;;
 

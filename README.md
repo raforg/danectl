@@ -94,6 +94,10 @@ To install under /usr instead:
 
     make PREFIX=/usr install
 
+To uninstall danectl:
+
+    make uninstall
+
 # REQUIREMENTS
 
 For TLSA usage, danectl requires /bin/sh, ls, cut, sed, grep, host,

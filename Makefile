@@ -34,12 +34,12 @@ DANECTL_VERSION=0.4
 DANECTL_DATE=20210830
 DANECTL_ID=$(DANECTL_NAME)-$(DANECTL_VERSION)
 DANECTL_DIST=$(DANECTL_ID).tar.gz
-DANECTL_MANFILES=$(DANECTL_NAME).$(APP_MANSECT)
-DANECTL_HTMLFILES=$(DANECTL_NAME).$(APP_MANSECT).html
+DANECTL_MANFILE=$(DANECTL_NAME).$(APP_MANSECT)
+DANECTL_HTMLFILE=$(DANECTL_NAME).$(APP_MANSECT).html
 
 install: install-bin install-man
 
-dist: clean $(DANECTL_MANFILES)
+dist: clean $(DANECTL_MANFILE)
 	@set -e; \
 	up="`pwd`/.."; \
 	src=`basename \`pwd\``; \
@@ -55,9 +55,17 @@ install-bin:
 	mkdir -p $(APP_INSDIR)
 	install -m 755 $(DANECTL_NAME) $(APP_INSDIR)
 
-install-man: $(DANECTL_MANFILES)
+install-man: $(DANECTL_MANFILE)
 	mkdir -p $(APP_MANDIR)
-	install -m 644 $(DANECTL_MANFILES) $(APP_MANDIR)
+	install -m 644 $(DANECTL_MANFILE) $(APP_MANDIR)
+
+uninstall: uninstall-bin uninstall-man
+
+uninstall-bin:
+	rm -r $(APP_INSDIR)/$(DANECTL_NAME)
+
+uninstall-man:
+	rm -r $(APP_MANDIR)/$(DANECTL_MANFILE)
 
 %.$(APP_MANSECT): %
 	./$< help | perl -pe 's/^([A-Z ]+)$$/=head1 $$1/' | pod2man --section='$(APP_MANSECT)' --center='$(APP_MANSECTNAME)' --name='$(shell echo $(DANECTL_NAME) | tr a-z A-Z)' --release='$(DANECTL_ID)' --date='$(DANECTL_DATE)' --quotes=none > $@

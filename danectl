@@ -64,8 +64,8 @@ commands:
  reload <certname...>                    - Reload affected services
  rollover <certname...>                  - Perform a key rollover
  status                                  - Show current/next status
- sshfp                                   - Output SSHFP RRs for localhost
- sshfp-check                             - Check that SSHFP RRs are published
+ sshfp <domain>                          - Output SSHFP RRs for localhost
+ sshfp-check <domain>                    - Check that SSHFP RRs are published
  aliases                                 - Show subcommand aliases
 
 Danectl is a DNSSEC DANE implementation manager. It uses certbot to create
@@ -132,8 +132,8 @@ SYNOPSIS
   reload <certname...>                   - Reload affected services
   rollover <certname...>                 - Perform a key rollover
   status                                 - Show current/next status
-  sshfp                                  - Output SSHFP RRs for localhost
-  sshfp-check                            - Check that SSHFP RRs are published
+  sshfp <domain>                         - Output SSHFP RRs for localhost
+  sshfp-check <domain>                   - Check that SSHFP RRs are published
   aliases                                - Show subcommand aliases
 
 DESCRIPTION

@@ -17,11 +17,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <https://www.gnu.org/licenses/>.
 #
-# 20210830 raf <raf@raf.org>
+# 20210901 raf <raf@raf.org>
 
 name=danectl
-version=0.4
-date=20210830
+version=0.4.1
+date=20210901
 
 # Some defaults
 
@@ -431,7 +431,7 @@ certbot(1), danebot(1), ssh_config(5), RFC6698, RFC7671, RFC7672, RFC4255.
 
 AUTHOR
 
-20210830 raf <raf@raf.org>
+20210901 raf <raf@raf.org>
 
 URL
 

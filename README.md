@@ -81,8 +81,8 @@ and which are next, and which TLSA records are not yet published).
 
 To install danectl:
 
-    tar xzf danectl-0.4.tar.gz
-    cd danectl-0.4
+    tar xzf danectl-0.4.1.tar.gz
+    cd danectl-0.4.1
     make install
 
 This will install:
@@ -109,6 +109,6 @@ For SSHFP usage, danectl requires /bin/sh, sed, host, perl, ssh-keygen.
 
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
-    Date: 20210830
+    Date: 20210901
     Author: raf <raf@raf.org>
 

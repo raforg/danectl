@@ -122,7 +122,7 @@ For SSHFP usage, danectl requires /bin/sh, sed, host, perl, and ssh-keygen.
 
 For OPENPGPKEY usage, danectl requires /bin/sh, perl, and gpg.
 
-For SMIMEA usage: /bin/sh, perl, and openssl.
+For SMIMEA usage, danectl requires /bin/sh, perl, and openssl.
 
 --------------------------------------------------------------------------------
 

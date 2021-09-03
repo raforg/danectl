@@ -70,11 +70,17 @@ commands:
  sshfp <domain>                          - Output SSHFP RRs for localhost
  sshfp-check <domain>                    - Check that SSHFP RRs are published
 
+ openpgpkey <emailaddress>               - Output OPENPGPKEY RR for an email
+ openpgpkey-check <emailaddress>         - Check OPENPGPKEY RR is published
+
 Danectl is a DNSSEC DANE implementation manager. It uses certbot to create
 and manage a pair of keys for use with a TLSA 3 1 1 current + next workflow.
 It generates TLSA records for your TLS services for you to publish to the DNS,
 checks that they are correctly published, and performs key rollovers.
+
 Danectl can generate and check SSHFP records for the local SSH server as well.
+Danectl can generate and check an OPENPGPKEY record for a GnuPG key as well.
+
 Read "danectl help" for more information.
 
 Name: $name
@@ -139,6 +145,9 @@ SYNOPSIS
 
   sshfp <domain>                         - Output SSHFP RRs for localhost
   sshfp-check <domain>                   - Check that SSHFP RRs are published
+
+  openpgpkey <emailaddress>              - Output OPENPGPKEY RR for an email
+  openpgpkey-check <emailaddress>        - Check OPENPGPKEY RR is published
 
 DESCRIPTION
 
@@ -370,6 +379,18 @@ DNS:
 
   danectl sshfp-check example.org
 
+You can also output an OPENPGPKEY record for the key that is associated with
+an email address in your GnuPG public keyring:
+
+  danectl openpgpkey user@example.org
+
+To check that the OPENPGPKEY record for the email address is published in
+the DNS:
+
+  danectl openpgpkey-check user@example.org
+
+The email address must be a valid argument for gpg's --export option.
+
 FILES
 
   /etc/letsencrypt         - Certbot installation
@@ -405,6 +426,10 @@ records, but they can't be done with danectl. But what can be done with
 danectl can be done easily. If you need greater flexibility, you'll need to
 find it elsewhere.
 
+For OPENPGPKEY usage, if your public keyring contains multiple keys with the
+same email address keyid, danectl will only output the first one that gpg
+exports. Let me know if this is a problem.
+
 CAVEAT
 
 If you need to add or remove any domains from a pair of certificate
@@ -424,6 +449,8 @@ readlink, certbot, openssl, sha256sum, and root privileges.
 
 For SSHFP usage, danectl requires /bin/sh, sed, host, perl, and ssh-keygen.
 
+For OPENPGPKEY usage, danectl requires /bin/sh, perl, and gpg.
+
 LICENSE
 
 Danectl is released under the terms of the GPLv2+
@@ -431,7 +458,8 @@ https://www.gnu.org/licenses.
 
 SEE ALSO
 
-certbot(1), danebot(1), ssh_config(5), RFC6698, RFC7671, RFC7672, RFC4255.
+certbot(1), danebot(1), ssh_config(5), gpg(1), RFC6698, RFC7671, RFC7672,
+RFC4255, RFC7929.
 
 AUTHOR
 
@@ -929,6 +957,118 @@ sshfp_check()
 	'
 }
 
+# Check the prerequisites for OPENPGPKEY
+
+check_openpgpkey_prerequisites()
+{
+	for cmd in gpg perl
+	do
+		case "`which $cmd`" in /*) ;; *) die "Failed to find $cmd";; esac
+	done
+}
+
+# Output OPENPGPKEY RR for an email
+
+openpgpkey()
+{
+	local email="$1"
+	# Convert gpg's hex output to base64
+	gpg --export-options export-dane --export "$email" | perl -e '
+		use strict;
+		use warnings;
+		sub base64
+		{
+			pos $_[0] = 0;
+			my $padlen = (3 - length($_[0]) % 3) % 3;
+			my $encoded = join "", map { pack("u", $_) =~ /^.(\S*)/ } $_[0] =~ /(.{1,45})/gs;
+			$encoded =~ tr{` -_}{AA-Za-z0-9+/};
+			$encoded =~ s/.{$padlen}$/"=" x $padlen/e if $padlen;
+			$encoded =~ s/(.{1,56})/\t$1\n/g;
+			return $encoded;
+		}
+		my $origin;
+		my $prefix;
+		my $comment = "";
+		my $key_hex = "";
+		while (<>)
+		{
+			$origin = $1, next if /^\$ORIGIN (\S+)/;
+			$comment .= $_, next if /^;/;
+			$prefix = $1, next if /^([0-9a-f]+) TYPE61 \\# \d+ \($/;
+			$key_hex .= $1, next if /^\s+([0-9a-f]+)$/;
+			last if /^\s+\)$/;
+		}
+		while (<>) {}
+		exit unless $origin && $prefix && $key_hex;
+		print($comment);
+		print("$prefix.$origin\tIN\tOPENPGPKEY\t(\n");
+		print(base64(pack("H*", $key_hex)));
+		print("\t)\n");
+	'
+}
+
+# Check OPENPGPKEY RR is published
+
+openpgpkey_check()
+{
+	local email="$1"
+	gpg --export-options export-dane --export "$email" | perl -e '
+		use strict;
+		use warnings;
+		use Digest;
+		# Get the key to check
+		sub base64
+		{
+			pos $_[0] = 0;
+			my $padlen = (3 - length($_[0]) % 3) % 3;
+			my $encoded = join "", map { pack("u", $_) =~ /^.(\S*)/ } $_[0] =~ /(.{1,45})/gs;
+			$encoded =~ tr{` -_}{AA-Za-z0-9+/};
+			$encoded =~ s/.{$padlen}$/"=" x $padlen/e if $padlen;
+			$encoded =~ s/(.{1,56})/\t$1\n/g;
+			return $encoded;
+		}
+		my $origin;
+		my $prefix;
+		my $comment = "";
+		my $key_hex = "";
+		while (<>)
+		{
+			$origin = $1, next if /^\$ORIGIN (\S+)/;
+			$comment .= $_, next if /^;/;
+			$prefix = $1, next if /^([0-9a-f]+) TYPE61 \\# \d+ \($/;
+			$key_hex .= $1, next if /^\s+([0-9a-f]+)$/;
+			last if /^\s+\)$/;
+		}
+		while (<>) {}
+		my $key_exists = $origin && $prefix && $key_hex;
+		my $key_base64 = base64(pack("H*", $key_hex)) if $key_exists;
+		my $email = q('"$email"');
+		my ($localpart, $domain) = $email =~ /^([^@]+)@([^@]+)$/;
+		die("'$name': Invalid email address: $email\n") unless defined $localpart && defined $domain;
+		if (!$key_exists)
+		{
+			my $hash = Digest->new("SHA-256");
+			$hash->add($localpart);
+			$prefix = substr($hash->hexdigest(), 0, 28 * 2);
+			$origin = "_openpgpkey.$domain";
+		}
+		# Is it published? Are any other keys published?
+		my $missing = $key_exists;
+		my $extraneous = "";
+		for (grep { /has OPENPGPKEY record/ } split /\n/, `host -t openpgpkey "$prefix.$origin"`)
+		{
+			my ($name, $rrdata) = $_ =~ /^(\S+) has OPENPGPKEY record (.+)$/;
+			$name = substr($name, 0, -(length($domain) + 1));
+			$rrdata =~ s/ /\n\t/g;
+			$rrdata = "\t$rrdata\n";
+			$missing = 0, next if $key_base64 && $rrdata eq $key_base64;
+			$extraneous .= "$comment$prefix.$origin\tIN\tOPENPGPKEY\t(\n$rrdata\t)\n";
+		}
+		print("; Missing $email openpgpkey (should be published)\n$comment$prefix.$origin\tIN\tOPENPGPKEY\t(\n$key_base64\t)\n") if $missing;
+		print("; Extraneous $email openpgpkey (should be removed)\n$extraneous") if $extraneous;
+	'
+}
+
 # Handle any command line options
 
 [ $# = 0 ] && usage 0 | ${PAGER:-more}
@@ -1093,6 +1233,18 @@ case "$command" in
 		sshfp_check "$@"
 		;;
 
+	openpgpkey|pgpkey|gpgkey|pgp|gpg|p|g)
+		[ $# != 1 ] && usage 1 "Missing openpgpkey argument"
+		check_openpgpkey_prerequisites
+		openpgpkey "$@"
+		;;
+
+	openpgpkey-check|check-openpgpkey|pgpkey-check|check-pgpkey|gpgkey-check|check-gpg|pc|cp|gc|cg)
+		[ $# != 1 ] && usage 1 "Missing openpgpkey-check argument"
+		check_openpgpkey_prerequisites
+		openpgpkey_check "$@"
+		;;
+
 	aliases|a):
 		echo "help: h"
 		echo "certbot: c"
@@ -1113,6 +1265,8 @@ case "$command" in
 		echo "status: s"
 		echo "sshfp: ssh"
 		echo "sshfp-check: check-sshfp ssh-check check-ssh sch schk"
+		echo "openpgpkey: pgpkey gpgkey pgp gpg p g"
+		echo "openpgpkey-check: check-openpgpkey pgpkey-check check-pgpkey gpgkey-check check-gpg pc cp gc cg"
 		echo "aliases: a"
 		;;
 

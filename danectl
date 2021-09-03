@@ -40,12 +40,14 @@ usage()
 	[ -z "$@" ] || echo "$name: $@" >&2
 	cat << USAGE
 usage: $name [options] command [arg...]
+
 options:
  -h, --help                              - Show a short help message
  -V, --version                           - Show the name and version
  -v, --verbose                           - Verbose mode (announce actions)
  -q, --quiet                             - Quiet mode (pass -q to certbot)
  -n, --test                              - Test mode (don't do things)
+
 commands:
  help                                    - Show more help than -h does
  aliases                                 - Show subcommand aliases
@@ -69,17 +71,19 @@ commands:
 
  sshfp <domain>                          - Output SSHFP RRs for localhost
  sshfp-check <domain>                    - Check that SSHFP RRs are published
-
  openpgpkey <emailaddress>               - Output OPENPGPKEY RR for an email
  openpgpkey-check <emailaddress>         - Check OPENPGPKEY RR is published
+ smimea <smimecert.pem>                  - Output SMIMEA RR for a certificate
+ smimea-check <smimecert.pem>            - Check SMIMEA RR is published
 
 Danectl is a DNSSEC DANE implementation manager. It uses certbot to create
 and manage a pair of keys for use with a TLSA 3 1 1 current + next workflow.
 It generates TLSA records for your TLS services for you to publish to the DNS,
 checks that they are correctly published, and performs key rollovers.
 
-Danectl can generate and check SSHFP records for the local SSH server as well.
-Danectl can generate and check an OPENPGPKEY record for a GnuPG key as well.
+Danectl can also generate and check SSHFP records for the local SSH server.
+Danectl can also generate and check an OPENPGPKEY record for a GnuPG key.
+Danectl can also generate and check an SMIMEA record for an S/MIME certificate.
 
 Read "danectl help" for more information.
 
@@ -116,12 +120,14 @@ danectl - DNSSEC DANE implementation manager
 SYNOPSIS
 
  usage: $name [options] command [arg...]
+
  options:
   -h, --help                             - Show a short help message
   -V, --version                          - Show the name and version
   -v, --verbose                          - Verbose mode (announce actions)
   -q, --quiet                            - Quiet mode (pass -q to certbot)
   -n, --test                             - Test mode (don't do things)
+
  commands:
   help                                   - Show more help than -h does
   aliases                                - Show subcommand aliases
@@ -145,17 +151,22 @@ SYNOPSIS
 
   sshfp <domain>                         - Output SSHFP RRs for localhost
   sshfp-check <domain>                   - Check that SSHFP RRs are published
-
   openpgpkey <emailaddress>              - Output OPENPGPKEY RR for an email
   openpgpkey-check <emailaddress>        - Check OPENPGPKEY RR is published
+  smimea <smimecert.pem>                 - Output SMIMEA RR for a certificate
+  smimea-check <smimecert.pem>           - Check SMIMEA RR is published
 
-DESCRIPTION
+INTRODUCTION
 
 Danectl is a DNSSEC DANE implementation manager. It uses certbot to create
 and manage a pair of keys for use with a TLSA 3 1 1 current + next workflow.
 It generates TLSA records for your TLS services for you to publish to the DNS,
 checks that they are correctly published, and performs key rollovers.
-Danectl can generate and check SSHFP records for the local SSH server as well.
+Danectl can also generate and check SSHFP records for the local SSH server.
+Danectl can also generate and check an OPENPGPKEY record for a GnuPG key.
+Danectl can also generate and check an SMIMEA record for an S/MIME certificate.
+
+DESCRIPTION
 
 Danectl lets you create a pair of certbot certificate lineages to be used
 with DANE. They are referred to as the "original" and the "duplicate", or
@@ -187,9 +198,13 @@ but the underlying keypair doesn't change, and the TLSA records can remain
 stable.
 
 Periodically, you can perform key rollovers on a schedule that suits you
-(e.g. annually). An emergency key rollover is exactly the same. At any time,
-you can show the status (which certificate lineages are current and which
-are next, and which TLSA records are not yet published).
+(e.g. annually). An emergency key rollover is exactly the same.
+
+At any time, you can show the status (which certificate lineages are current
+and which are next, and which TLSA records are not yet published).
+
+In addition to TLSA records, you can also generate SSHFP, OPENPGPKEY, and
+SMIMEA records, and check that they are published.
 
 OPTIONS
 
@@ -222,9 +237,6 @@ Danectl can show you this help:
 You can also show the short aliases for all of the subcommands:
 
   danectl aliases
-
-Note that the short aliases are subject to change, and so should only be
-used interactively. Use the full documented names for scripts and cronjobs.
 
 Before you can use danectl to do anything interesting, you might need to
 supply any command line options that certbot will need when it creates new
@@ -306,8 +318,8 @@ To output all TLSA records for the next key:
 Initially, you need to publish the TLSA records for both the current and
 next keys in the DNS (somehow).
 
-To check that all TLSA records for the current and next keys are published
-in the DNS:
+To check that all TLSA records for the current and next keys are correctly
+published in the DNS:
 
   danectl tlsa-check example.org
 
@@ -358,7 +370,8 @@ At any time, you can show the status of all certificate pairs:
 
 This will show, for each base cert-name, which certificate lineage is
 current, and which is next. It will also show any TLSA records that should
-be, but are not, published in the DNS.
+be, but are not, published in the DNS. It will also show any TLSA records
+that are published in the DNS, but should not be.
 
 If any of the symlinks in /etc/letsencrypt/{current,next} target certificate
 lineages that no longer exist in /etc/letsencrypt/live, this is also
@@ -370,9 +383,9 @@ You can also output SSHFP records for the local SSH server:
   danectl sshfp example.org
 
 If you want to authorize your local SSH server's host keys to clients via
-DNSSEC, you need to publish these SSHFP records in the DNS (somehow). You
-will also need to set VerifyHostKeyDNS to "yes" or "ask" in the ssh client
-configuration.
+DNSSEC, you will need to publish these SSHFP records in the DNS (somehow).
+You will also need to set VerifyHostKeyDNS to "yes" or "ask" in the ssh
+client configuration.
 
 To check that SSHFP records for the local SSH server are published in the
 DNS:
@@ -384,12 +397,29 @@ an email address in your GnuPG public keyring:
 
   danectl openpgpkey user@example.org
 
+The email address must be a valid argument for gpg's --export operation. If
+you want your correspondents to find the key, you will need to publish the
+OPENPGPKEY record in the DNS (somehow), and they will need to add "dane" to
+their auto-key-locate list.
+
 To check that the OPENPGPKEY record for the email address is published in
 the DNS:
 
   danectl openpgpkey-check user@example.org
 
-The email address must be a valid argument for gpg's --export option.
+You can also output an SMIMEA record for an S/MIME certificate:
+
+  danectl smimea smimecert.pem
+
+The S/MIME certificate file must be in PEM format. If you want your
+correspondents to find the certificate, you will need to publish the SMIMEA
+record in the DNS (somehow), and they will probably need to consult their
+mail client documentation.
+
+To check that the SMIMEA record for an S/MIME certificate is published in
+the DNS:
+
+  danectl smimea-check smimecert.pem
 
 FILES
 
@@ -402,6 +432,18 @@ FILES
 The ~/.danectlrc configuration file is technically a shell script.
 But danectl's additions and removals are purely a single name="value"
 line at a time. Bear that in mind if you modify it manually.
+
+CAVEAT
+
+If you need to add or remove any domains from a pair of certificate
+lineages, you will need to do it with certbot, and you will need to do it
+for both the original and the duplicate certificate lineages (e.g.
+example.org and example.org-duplicate), and you will need to use certbot's
+--cert-name command line option. Since there will be two certificate
+lineages with the same set of domains, it would be ambiguous otherwise.
+Perhaps danectl should be able to do this, but it doesn't. There may be
+other things that you will need to use certbot directly for. Keep things in
+sync.
 
 BUGS
 
@@ -430,17 +472,8 @@ For OPENPGPKEY usage, if your public keyring contains multiple keys with the
 same email address keyid, danectl will only output the first one that gpg
 exports. Let me know if this is a problem.
 
-CAVEAT
-
-If you need to add or remove any domains from a pair of certificate
-lineages, you will need to do it with certbot, and you will need to do it
-for both the original and the duplicate certificate lineages (e.g.
-example.org and example.org-duplicate), and you will need to use certbot's
---cert-name command line option. Since there will be two certificate
-lineages with the same set of domains, it would be ambiguous otherwise.
-Perhaps danectl should be able to do this, but it doesn't. There may be
-other things that you will need to use certbot directly for. Keep things in
-sync.
+For SMIMEA usage, only SMIMEA 3 0 0 records are supported. This is not
+really a bug as they seem to be the most useful.
 
 REQUIREMENTS
 
@@ -451,6 +484,8 @@ For SSHFP usage, danectl requires /bin/sh, sed, host, perl, and ssh-keygen.
 
 For OPENPGPKEY usage, danectl requires /bin/sh, perl, and gpg.
 
+For SMIMEA usage, danectl requires /bin/sh, perl, and openssl.
+
 LICENSE
 
 Danectl is released under the terms of the GPLv2+
@@ -458,8 +493,8 @@ https://www.gnu.org/licenses.
 
 SEE ALSO
 
-certbot(1), danebot(1), ssh_config(5), gpg(1), RFC6698, RFC7671, RFC7672,
-RFC4255, RFC7929.
+certbot(1), danebot(1), ssh(1), ssh_config(5), gpg(1), openssl(1), RFC6698,
+RFC7671, RFC7672, RFC4255, RFC7929, RFC8162.
 
 AUTHOR
 
@@ -1069,6 +1104,102 @@ openpgpkey_check()
 	'
 }
 
+# Check the prerequisites for SMIMEA
+
+check_smimea_prerequisites()
+{
+	for cmd in openssl perl
+	do
+		case "`which $cmd`" in /*) ;; *) die "Failed to find $cmd";; esac
+	done
+}
+
+# Output SMIMEA RR for a certificate
+
+smimea()
+{
+	local cert="$1"
+	[ ! -f "$cert" ] && die "$cert is not a file"
+	local email="`openssl x509 -inform pem -in \"$cert\" -noout -text | perl -e '
+		use strict;
+		use warnings;
+		while (<>)
+		{
+			print("$1\n") if /emailAddress = (\S+)/;
+		}
+	'`"
+	[ -z "$email" ] && die "Failed to find an email address in the certificate"
+	openssl x509 -inform pem -in "$cert" -outform der | perl -e '
+		use strict;
+		use warnings;
+		binmode(STDIN);
+		$/ = undef;
+		my $cert = unpack("H*", <STDIN>);
+		$cert =~ s/(.{1,56})/\t$1\n/g;
+		use Digest;
+		my $email = q('"$email"');
+		my ($localpart, $domain) = $email =~ /^([^@]+)@([^@]+)$/;
+		die("'$name': Invalid email address: $email\n") unless defined $localpart && defined $domain;
+		my $hash = Digest->new("SHA-256");
+		$hash->add($localpart);
+		my $prefix = substr($hash->hexdigest(), 0, 28 * 2);
+		my $origin = "_smimecert.$domain";
+		print("; $email\n");
+		print("$prefix.$origin\tIN\tSMIMEA\t(\n\t3 0 0\n$cert\t)\n");
+	'
+}
+
+# Check SMIMEA RR is published
+
+smimea_check()
+{
+	local cert="$1"
+	[ ! -f "$cert" ] && die "$cert is not a file"
+	local email="`openssl x509 -inform pem -in \"$cert\" -noout -text | perl -e '
+		use strict;
+		use warnings;
+		while (<>)
+		{
+			print("$1\n") if /emailAddress = (\S+)/;
+		}
+	'`"
+	[ -z "$email" ] && die "Failed to find an email address in the certificate"
+	openssl x509 -inform pem -in "$cert" -outform der | perl -e '
+		use strict;
+		use warnings;
+		binmode(STDIN);
+		$/ = undef;
+		my $cert = unpack("H*", <STDIN>);
+		$cert =~ s/(.{1,56})/\t$1\n/g;
+		use Digest;
+		my $email = q('"$email"');
+		my ($localpart, $domain) = $email =~ /^([^@]+)@([^@]+)$/;
+		die("'$name': Invalid email address: $email\n") unless defined $localpart && defined $domain;
+		my $hash = Digest->new("SHA-256");
+		$hash->add($localpart);
+		my $comment = "; $email\n";
+		my $prefix = substr($hash->hexdigest(), 0, 28 * 2);
+		my $origin = "_smimecert.$domain";
+		#print("; $email\n");
+		#print("$prefix.$origin\tIN\tSMIMEA\t(\n\t3 0 0\n$cert\t)\n");
+		my $missing = 1;
+		my $extraneous = "";
+		for (grep { /has SMIMEA record/ } split /\n/, `host -t smimea "$prefix.$origin"`)
+		{
+			my ($name, $rrdata) = $_ =~ /^(\S+) has SMIMEA record (.+)$/;
+			$name = substr($name, 0, -(length($domain) + 1));
+			$rrdata = lc($rrdata);
+			$rrdata =~ s/ /\n\t/g;
+			$rrdata =~ s/^3\n\t0\n\t0/3 0 0/;
+			$rrdata = "\t$rrdata\n";
+			$missing = 0, next if $rrdata eq "\t3 0 0\n$cert";
+			$extraneous .= "$comment$prefix.$origin\tIN\tSMIME\t(\n$rrdata\t)\n";
+		}
+		print("; Missing $email smimea (must be published)\n$comment$prefix.$origin\tIN\tSMIMEA\t(\n\t3 0 0\n$cert\t)\n") if $missing;
+		print("; Extraneous $email smimea (should be removed)\n$extraneous") if $extraneous;
+	'
+}
+
 # Handle any command line options
 
 [ $# = 0 ] && usage 0 | ${PAGER:-more}
@@ -1239,10 +1370,22 @@ case "$command" in
 		openpgpkey "$@"
 		;;
 
-	openpgpkey-check|check-openpgpkey|pgpkey-check|check-pgpkey|gpgkey-check|check-gpg|pc|cp|gc|cg)
+	openpgpkey-check|check-openpgpkey|pgpkey-check|check-pgpkey|gpgkey-check|check-gpgkey|pgp-check|check-pgp|gpg-check|check-gpg|pc|cp|gc|cg)
 		[ $# != 1 ] && usage 1 "Missing openpgpkey-check argument"
 		check_openpgpkey_prerequisites
 		openpgpkey_check "$@"
+		;;
+
+	smimea|smime|sm)
+		[ $# != 1 ] && usage 1 "Missing smimea argument"
+		check_smimea_prerequisites
+		smimea "$@"
+		;;
+
+	smimea-check|check-smimea|smime-check|check-smime|smc|csm)
+		[ $# != 1 ] && usage 1 "Missing smimea-check argument"
+		check_smimea_prerequisites
+		smimea_check "$@"
 		;;
 
 	aliases|a):
@@ -1266,7 +1409,9 @@ case "$command" in
 		echo "sshfp: ssh"
 		echo "sshfp-check: check-sshfp ssh-check check-ssh sch schk"
 		echo "openpgpkey: pgpkey gpgkey pgp gpg p g"
-		echo "openpgpkey-check: check-openpgpkey pgpkey-check check-pgpkey gpgkey-check check-gpg pc cp gc cg"
+		echo "openpgpkey-check: check-openpgpkey pgpkey-check check-pgpkey gpgkey-check check-gpgkey pgp-check check-pgp gpg-check check-gpg pc cp gc cg"
+		echo "smimea: smime sm"
+		echo "smimea-check: check-smimea smime-check check-smime smc csm"
 		echo "aliases: a"
 		;;
 

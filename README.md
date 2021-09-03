@@ -9,8 +9,11 @@ and manage pairs of keys for use with a TLSA 3 1 1 current + next workflow.
 It generates TLSA records for your TLS services for you to publish to the DNS,
 checks that they are correctly published, and performs key rollovers.
 
-*Danectl* can generate and check SSHFP records for the local *SSH* server as well.
-*Danectl* can generate and check an OPENPGPKEY record for a GnuPG key as well.
+*Danectl* can also generate and check SSHFP records for the local *SSH* server.
+
+*Danectl* can also generate and check an OPENPGPKEY record for a *GnuPG* key.
+
+*Danectl* can also generate and check an SMIMEA record for an S/MIME certificate.
 
 # DESCRIPTION
 
@@ -79,6 +82,16 @@ and which are next, and which TLSA records are not yet published).
 
     danectl status
 
+In addition to TLSA records, you can also generate SSHFP, OPENPGPKEY, and
+SMIMEA records, and check that they are published.
+
+    danectl sshfp example.org
+    danectl sshfp-check example.org
+    danectl openpgpkey user@example.org
+    danectl openpgpkey-check user@example.org
+    danectl smimea smimecert.pem
+    danectl smimea-check smimecert.pem
+
 # INSTALL
 
 To install danectl:
@@ -108,6 +121,8 @@ readlink, certbot, openssl, sha256sum, and root privileges.
 For SSHFP usage, danectl requires /bin/sh, sed, host, perl, and ssh-keygen.
 
 For OPENPGPKEY usage, danectl requires /bin/sh, perl, and gpg.
+
+For SMIMEA usage: /bin/sh, perl, and openssl.
 
 --------------------------------------------------------------------------------
 

@@ -10,6 +10,7 @@ It generates TLSA records for your TLS services for you to publish to the DNS,
 checks that they are correctly published, and performs key rollovers.
 
 *Danectl* can generate and check SSHFP records for the local *SSH* server as well.
+*Danectl* can generate and check an OPENPGPKEY record for a GnuPG key as well.
 
 # DESCRIPTION
 
@@ -105,6 +106,8 @@ For TLSA usage, danectl requires /bin/sh, ls, cut, sed, grep, host,
 readlink, certbot, openssl, sha256sum, and root privileges.
 
 For SSHFP usage, danectl requires /bin/sh, sed, host, perl, and ssh-keygen.
+
+For OPENPGPKEY usage, danectl requires /bin/sh, perl, and gpg.
 
 --------------------------------------------------------------------------------
 

@@ -384,9 +384,9 @@ line at a time. Bear that in mind if you modify it manually.
 
 BUGS
 
-This isn't a bug. It's a choice. Danectl relies entirely on certbot. This
+Danectl relies entirely on certbot. This isn't a bug. It's a choice. This
 choice was made so as to make danectl easy to implement, and because it's
-pragmatic. The same key can be used with DANE-aware or PKI-aware clients.
+pragmatic. The same key can be used with DANE-aware or PKIX-aware clients.
 You don't need to know which. And you don't need to exclude any clients.
 
 But it means that it only works with keys that are created by certbot, and

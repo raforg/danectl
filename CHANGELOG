@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+0.5 (20210903)
+
+    - Add OPENPGPKEY (openpgpkey and openpgpkey-check subcommands)
+    - Add SMIMEA (smimea and smimea-check subcommands)
+    - Minor documentation improvements
+
 0.4.1 (20210901)
 
     - Fix sshfp/sshfp-check syntax documentation in usage, help, manpage
@@ -55,7 +61,7 @@ CHANGELOG
 
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
-    Date: 20210901
+    Date: 20210903
     Author: raf <raf@raf.org>
 
 

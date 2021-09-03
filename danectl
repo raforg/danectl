@@ -48,6 +48,8 @@ options:
  -n, --test                              - Test mode (don't do things)
 commands:
  help                                    - Show more help than -h does
+ aliases                                 - Show subcommand aliases
+
  certbot <options...>                    - Supply certbot command line options
  adopt <certname...>                     - Convert existing cert to reuse_key
  new <domain...>                         - Create a new original/current cert
@@ -64,9 +66,9 @@ commands:
  reload <certname...>                    - Reload affected services
  rollover <certname...>                  - Perform a key rollover
  status                                  - Show current/next status
+
  sshfp <domain>                          - Output SSHFP RRs for localhost
  sshfp-check <domain>                    - Check that SSHFP RRs are published
- aliases                                 - Show subcommand aliases
 
 Danectl is a DNSSEC DANE implementation manager. It uses certbot to create
 and manage a pair of keys for use with a TLSA 3 1 1 current + next workflow.
@@ -116,6 +118,8 @@ SYNOPSIS
   -n, --test                             - Test mode (don't do things)
  commands:
   help                                   - Show more help than -h does
+  aliases                                - Show subcommand aliases
+
   certbot <options...>                   - Supply certbot command line options
   adopt <certname...>                    - Convert existing cert to reuse_key
   new <domain...>                        - Create a new original/current cert
@@ -132,9 +136,9 @@ SYNOPSIS
   reload <certname...>                   - Reload affected services
   rollover <certname...>                 - Perform a key rollover
   status                                 - Show current/next status
+
   sshfp <domain>                         - Output SSHFP RRs for localhost
   sshfp-check <domain>                   - Check that SSHFP RRs are published
-  aliases                                - Show subcommand aliases
 
 DESCRIPTION
 
@@ -205,6 +209,13 @@ COMMANDS
 Danectl can show you this help:
 
   danectl help
+
+You can also show the short aliases for all of the subcommands:
+
+  danectl aliases
+
+Note that the short aliases are subject to change, and so should only be
+used interactively. Use the full documented names for scripts and cronjobs.
 
 Before you can use danectl to do anything interesting, you might need to
 supply any command line options that certbot will need when it creates new
@@ -351,20 +362,13 @@ You can also output SSHFP records for the local SSH server:
 
 If you want to authorize your local SSH server's host keys to clients via
 DNSSEC, you need to publish these SSHFP records in the DNS (somehow). You
-will also need to set VerifyHostKeyDNS to yes or ask in the ssh client
+will also need to set VerifyHostKeyDNS to "yes" or "ask" in the ssh client
 configuration.
 
 To check that SSHFP records for the local SSH server are published in the
 DNS:
 
   danectl sshfp-check example.org
-
-You can also show the short aliases for all of the subcommands:
-
-  danectl aliases
-
-Note that short aliases are subject to change, and so should only be used
-interactively. Use the full documented names for scripts and cronjobs.
 
 FILES
 
@@ -416,9 +420,9 @@ sync.
 REQUIREMENTS
 
 For TLSA usage, danectl requires /bin/sh, ls, cut, sed, grep, host,
-readlink, certbot, openssl, sha256sum.
+readlink, certbot, openssl, sha256sum, and root privileges.
 
-For SSHFP usage, danectl requires /bin/sh, sed, host, perl, ssh-keygen.
+For SSHFP usage, danectl requires /bin/sh, sed, host, perl, and ssh-keygen.
 
 LICENSE
 
@@ -896,7 +900,7 @@ check_sshfp_prerequisites()
 
 # Output SSHFP RRs for the current host
 
-sshfp_current()
+sshfp()
 {
 	local hostname="$1"
 	ssh-keygen -r "$hostname" | sed -e 's/ /\t/' -e 's/ /\t/' -e 's/ /\t/'
@@ -1080,7 +1084,7 @@ case "$command" in
 	sshfp|ssh)
 		[ $# != 1 ] && usage 1 "Missing sshfp argument"
 		check_sshfp_prerequisites
-		sshfp_current "$@"
+		sshfp "$@"
 		;;
 
 	sshfp-check|check-sshfp|ssh-check|check-ssh|sch|schk)

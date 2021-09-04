@@ -666,7 +666,7 @@ tlsa_check()
 	missing=0
 	for t in $tlsa
 	do
-		if host -t tlsa "$t.$certname" | grep -iq "$hash_current"
+		if host -t tlsa "$t.$certname" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_current"
 		then
 			:
 		else
@@ -678,7 +678,7 @@ tlsa_check()
 	missing=0
 	for t in $tlsa
 	do
-		if host -t tlsa "$t.$certname" | grep -iq "$hash_next"
+		if host -t tlsa "$t.$certname" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_next"
 		then
 			:
 		else

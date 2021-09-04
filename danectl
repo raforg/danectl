@@ -203,8 +203,9 @@ stable.
 Periodically, you can perform key rollovers on a schedule that suits you
 (e.g. annually). An emergency key rollover is exactly the same.
 
-At any time, you can show the status (which certificate lineages are current
-and which are next, and which TLSA records are not yet published).
+At any time, you can show the status (which certificate lineages are
+current, which are next, which new TLSA records are not yet published, and
+which old TLSA records are not yet removed).
 
 In addition to TLSA records, you can also generate SSHFP, OPENPGPKEY, and
 SMIMEA records, and check that they are published.

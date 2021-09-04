@@ -77,8 +77,9 @@ Periodically, you can perform key rollovers on a schedule that suits you
 
     danectl rollover example.org
 
-At any time, you can show the status (which certificate lineages are current
-and which are next, and which TLSA records are not yet published).
+At any time, you can show the status (which certificate lineages are
+current, which are next, which new TLSA records are not yet published, and
+which old TLSA records are not yet removed).
 
     danectl status
 

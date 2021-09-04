@@ -690,7 +690,7 @@ tlsa_check()
 	superfluous=0
 	for t in $tlsa
 	do
-		extra="`host -t tlsa \"$t.$certname\" | grep TLSA | sed -e 's/^/;/' -e 's/ has /	/' -e 's/ record /	/' -e 'y/ABCDEF/abcdef/' -e 's/TLSa/TLSA/' -e 's/ \([a-f0-9][a-f0-9]*\)$/\1/' | grep -v \"$hash_current\" | grep -v \"$hash_next\"`"
+		extra="`host -t tlsa \"$t.$certname\" | grep TLSA | sed -e 's/^/;/' -e 's/ has /.	/' -e 's/ record /	/' -e 'y/ABCDEF/abcdef/' -e 's/TLSa/TLSA/' -e 's/ \([a-f0-9][a-f0-9]*\)$/\1/' | grep -v \"$hash_current\" | grep -v \"$hash_next\"`"
 		if [ -n "$extra" ]
 		then
 			[ "$superfluous" = 0 ] && echo ";; Superfluous $certname (should be removed)"
@@ -983,7 +983,7 @@ check_sshfp_prerequisites()
 sshfp()
 {
 	local hostname="$1"
-	ssh-keygen -r "$hostname" | sed -e 's/ /	/' -e 's/ /	/' -e 's/ /	/'
+	ssh-keygen -r "$hostname" | sed -e 's/ /.	/' -e 's/ /	/' -e 's/ /	/'
 }
 
 # Check that SSHFP RRs are published
@@ -999,12 +999,12 @@ sshfp_check()
 		my $missing = 0;
 		for my $sshfp (sort keys %current)
 		{
-			print(($missing ? "" : "; Missing '"$hostname"' sshfp (must be published)\n"), "'"$hostname"'\tIN\tSSHFP\t$sshfp\n"), $missing = 1 if !exists $published{$sshfp};
+			print(($missing ? "" : "; Missing '"$hostname"' sshfp (must be published)\n"), "'"$hostname"'.\tIN\tSSHFP\t$sshfp\n"), $missing = 1 if !exists $published{$sshfp};
 		}
 		my $superfluous = 0;
 		for my $sshfp (sort keys %published)
 		{
-			print(($superfluous ? "" : ";; Superfluous '"$hostname"' sshfp (should be removed)\n"), ";", "'"$hostname"'\tIN\tSSHFP\t$sshfp\n"), $superfluous = 1 if !exists $current{$sshfp};
+			print(($superfluous ? "" : ";; Superfluous '"$hostname"' sshfp (should be removed)\n"), ";", "'"$hostname"'.\tIN\tSSHFP\t$sshfp\n"), $superfluous = 1 if !exists $current{$sshfp};
 		}
 	'
 }
@@ -1161,7 +1161,7 @@ smimea()
 		my $hash = Digest->new("SHA-256");
 		$hash->add($localpart);
 		my $prefix = substr($hash->hexdigest(), 0, 28 * 2);
-		my $origin = "_smimecert.$domain";
+		my $origin = "_smimecert.$domain.";
 		print("; $email\n");
 		print("$prefix.$origin\tIN\tSMIMEA\t(\n\t3 0 0\n$cert\t)\n");
 	'
@@ -1197,7 +1197,7 @@ smimea_check()
 		$hash->add($localpart);
 		my $comment = "; $email\n";
 		my $prefix = substr($hash->hexdigest(), 0, 28 * 2);
-		my $origin = "_smimecert.$domain";
+		my $origin = "_smimecert.$domain.";
 		#print("; $email\n");
 		#print("$prefix.$origin\tIN\tSMIMEA\t(\n\t3 0 0\n$cert\t)\n");
 		my $missing = 1;

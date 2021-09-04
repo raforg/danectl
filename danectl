@@ -605,14 +605,15 @@ tlsa_role()
 	local role="$1"
 	local certname="$2"
 	local label="$3"
+	local prefix="$4"
 	shcertname="`shcertname $certname`"
 	eval tlsa="\$tlsa_$shcertname"
 	[ -z "$tlsa" ] && die "No TLSA records have been configured yet for $certname"
 	hash="`tlsa_hash $role $certname`"
-	echo "; $certname $label"
+	echo "$prefix; $certname $label"
 	for t in $tlsa
 	do
-		echo "$t\tIN\tTLSA\t3 1 1 $hash"
+		echo "$prefix$t\tIN\tTLSA\t3 1 1 $hash"
 	done
 }
 
@@ -631,7 +632,8 @@ tlsa_next()
 {
 	local certname="$1"
 	local label="${2:-next}"
-	tlsa_role next "$certname" "$label"
+	local prefix="$3"
+	tlsa_role next "$certname" "$label" "$prefix"
 }
 
 # Check that TLSA RRs are published
@@ -768,8 +770,8 @@ rollover()
 		next="-duplicate"
 	fi
 	# Show the old TLSA records that need to be removed from the DNS
-	echo "; Remove the following from the DNS"
-	tlsa_next "$certname" previous
+	echo ";; Remove the following old records from the DNS"
+	tlsa_next "$certname" previous ";"
 	# Create the new next keypair/certificate
 	del_line "$le/renewal/$certname$next.conf" "reuse_key ="
 	run certbot renew$quiet --force-renewal --cert-name "$certname$next"
@@ -777,7 +779,7 @@ rollover()
 	add_line "$le/renewal/$certname$next.conf" "reuse_key = True"
 	[ $test = 0 -a $rc != 0 ] && die "rollover $certname: certbot failed after the rollover! You must successfully run: certbot renew --force-renewal --cert-name \"$certname$next\" (but first remove \"reuse_key = True\" from $le/renewal/$certname$next.conf and then put it back afterwards)"
 	# Show the new TLSA records that need to be published to the DNS
-	echo "; Publish the following in the DNS"
+	echo "; Publish the following new records in the DNS"
 	tlsa_next "$certname"
 }
 

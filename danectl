@@ -630,7 +630,7 @@ tlsa_role()
 	echo "$prefix; $certname $label"
 	for t in $tlsa
 	do
-		echo "$prefix$t\tIN\tTLSA\t3 1 1 $hash"
+		echo "$prefix$t.$certname.\tIN\tTLSA\t3 1 1 $hash"
 	done
 }
 
@@ -672,7 +672,7 @@ tlsa_check()
 		else
 			[ "$missing" = 0 ] && echo "; Missing $certname current (must be published)"
 			missing=1
-			echo "$t\tIN\tTLSA\t3 1 1 $hash_current"
+			echo "$t.$certname.\tIN\tTLSA\t3 1 1 $hash_current"
 		fi
 	done
 	missing=0
@@ -684,7 +684,7 @@ tlsa_check()
 		else
 			[ "$missing" = 0 ] && echo "; Missing $certname next (must be published)"
 			missing=1
-			echo "$t\tIN\tTLSA\t3 1 1 $hash_next"
+			echo "$t.$certname.\tIN\tTLSA\t3 1 1 $hash_next"
 		fi
 	done
 	superfluous=0

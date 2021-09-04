@@ -22,6 +22,9 @@
 name=danectl
 version=0.5
 date=20210903
+author="raf <raf@raf.org>"
+url=https://raf.org/danectl
+git=https://github.com/raforg/danectl
 
 # Some defaults
 
@@ -90,11 +93,11 @@ Read "danectl help" for more information.
 Name: $name
 Version: $version
 Date: $date
-Author: raf <raf@raf.org>
-URL: https://raf.org/danectl
-URL: https://github.com/raforg/danectl
+Author: $author
+URL: $url
+URL: $git
 
-Copyright (C) 2021 raf <raf@raf.org>
+Copyright (C) 2021 $author
 
 This is free software released under the terms of the GPLv2+:
 
@@ -103,7 +106,7 @@ This is free software released under the terms of the GPLv2+:
 There is no warranty; not even for merchantability or fitness
 for a particular purpose.
 
-Report bugs to raf <raf@raf.org>
+Report bugs to $author
 USAGE
 	exit "$rc"
 }
@@ -512,12 +515,12 @@ RFC6698, RFC7671, RFC7672, RFC4255, RFC7929, RFC8162.
 
 AUTHOR
 
-20210903 raf <raf@raf.org>
+$date $author
 
 URL
 
-  https://raf.org/danectl
-  https://github.com/raforg/danectl
+  $url
+  $git
 
 HELP
 	exit 0

@@ -480,10 +480,10 @@ isn't really a bug. It's a limitation. There are too many ways to publish
 records to the DNS. But danectl does try to make it easy for you to handle
 that yourself by outputting records in the well-known Bind9 zonefile format.
 When performing a TLSA key rollover, and when performing any of the checks,
-any extraneous records that are to be removed are output in the form of
+any superfluous records that are to be removed are output in the form of
 comments where the leading semicolon (";") is not followed by a space (" ").
 That makes them easy to identify with grep (i.e. grep "^;[^ ]" for
-extraneous records to be removed, and grep -v "^;[^ ]" for missing records
+superfluous records to be removed, and grep -v "^;[^ ]" for missing records
 to be published). Perhaps a plugin system could be added for different DNS
 server software and different DNS service providers, but it should be easy
 enough to write a separate script to read the output of danectl and do what
@@ -686,14 +686,14 @@ tlsa_check()
 			echo "$t\tIN\tTLSA\t3 1 1 $hash_next"
 		fi
 	done
-	extraneous=0
+	superfluous=0
 	for t in $tlsa
 	do
 		extra="`host -t tlsa \"$t.$certname\" | grep TLSA | grep -iv \"$hash_current_short\" | grep -iv \"$hash_next_short\" | sed -e 's/^/;/' -e 's/has //' -e 's/record //'`"
 		if [ -n "$extra" ]
 		then
-			[ "$extraneous" = 0 ] && echo ";; Extraneous $certname (should be removed)"
-			extraneous=1
+			[ "$superfluous" = 0 ] && echo ";; Superfluous $certname (should be removed)"
+			superfluous=1
 			echo "$extra"
 		fi
 	done
@@ -1000,10 +1000,10 @@ sshfp_check()
 		{
 			print(($missing ? "" : "; Missing '"$hostname"' sshfp (must be published)\n"), "'"$hostname"'\tIN\tSSHFP\t$sshfp\n"), $missing = 1 if !exists $published{$sshfp};
 		}
-		my $extraneous = 0;
+		my $superfluous = 0;
 		for my $sshfp (sort keys %published)
 		{
-			print(($extraneous ? "" : ";; Extraneous '"$hostname"' sshfp (should be removed)\n"), ";", "'"$hostname"'\tIN\tSSHFP\t$sshfp\n"), $extraneous = 1 if !exists $current{$sshfp};
+			print(($superfluous ? "" : ";; Superfluous '"$hostname"' sshfp (should be removed)\n"), ";", "'"$hostname"'\tIN\tSSHFP\t$sshfp\n"), $superfluous = 1 if !exists $current{$sshfp};
 		}
 	'
 }
@@ -1105,7 +1105,7 @@ openpgpkey_check()
 		}
 		# Is it published? Are any other keys published?
 		my $missing = $key_exists;
-		my $extraneous = "";
+		my $superfluous = "";
 		for (grep { /has OPENPGPKEY record/ } split /\n/, `host -t openpgpkey "$prefix.$origin"`)
 		{
 			my ($name, $rrdata) = $_ =~ /^(\S+) has OPENPGPKEY record (.+)$/;
@@ -1113,11 +1113,11 @@ openpgpkey_check()
 			$rrdata =~ s/ /\n\t/g;
 			$rrdata = "\t$rrdata\n";
 			$missing = 0, next if $key_base64 && $rrdata eq $key_base64;
-			$extraneous .= "$comment$prefix.$origin\tIN\tOPENPGPKEY\t(\n$rrdata\t)\n";
+			$superfluous .= "$comment$prefix.$origin\tIN\tOPENPGPKEY\t(\n$rrdata\t)\n";
 		}
 		print("; Missing $email openpgpkey (should be published)\n$comment$prefix.$origin\tIN\tOPENPGPKEY\t(\n$key_base64\t)\n") if $missing;
-		$extraneous =~ s/^/;/mg if $extraneous;
-		print(";; Extraneous $email openpgpkey (should be removed)\n$extraneous") if $extraneous;
+		$superfluous =~ s/^/;/mg if $superfluous;
+		print(";; Superfluous $email openpgpkey (should be removed)\n$superfluous") if $superfluous;
 	'
 }
 
@@ -1200,7 +1200,7 @@ smimea_check()
 		#print("; $email\n");
 		#print("$prefix.$origin\tIN\tSMIMEA\t(\n\t3 0 0\n$cert\t)\n");
 		my $missing = 1;
-		my $extraneous = "";
+		my $superfluous = "";
 		for (grep { /has SMIMEA record/ } split /\n/, `host -t smimea "$prefix.$origin"`)
 		{
 			my ($name, $rrdata) = $_ =~ /^(\S+) has SMIMEA record (.+)$/;
@@ -1210,11 +1210,11 @@ smimea_check()
 			$rrdata =~ s/^3\n\t0\n\t0/3 0 0/;
 			$rrdata = "\t$rrdata\n";
 			$missing = 0, next if $rrdata eq "\t3 0 0\n$cert";
-			$extraneous .= "$comment$prefix.$origin\tIN\tSMIME\t(\n$rrdata\t)\n";
+			$superfluous .= "$comment$prefix.$origin\tIN\tSMIME\t(\n$rrdata\t)\n";
 		}
 		print("; Missing $email smimea (should be published)\n$comment$prefix.$origin\tIN\tSMIMEA\t(\n\t3 0 0\n$cert\t)\n") if $missing;
-		$extraneous =~ s/^/;/mg if $extraneous;
-		print(";; Extraneous $email smimea (should be removed)\n$extraneous") if $extraneous;
+		$superfluous =~ s/^/;/mg if $superfluous;
+		print(";; Superfluous $email smimea (should be removed)\n$superfluous") if $superfluous;
 	'
 }
 

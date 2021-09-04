@@ -966,7 +966,7 @@ check_sshfp_prerequisites()
 sshfp()
 {
 	local hostname="$1"
-	ssh-keygen -r "$hostname" | sed -e 's/ /\t/' -e 's/ /\t/' -e 's/ /\t/'
+	ssh-keygen -r "$hostname" | sed -e 's/ /	/' -e 's/ /	/' -e 's/ /	/'
 }
 
 # Check that SSHFP RRs are published

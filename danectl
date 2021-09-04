@@ -53,7 +53,7 @@ options:
 
 commands:
  help                                    - Show more help than -h does
- aliases                                 - Show subcommand aliases
+ aliases                                 - Show command aliases
 
  certbot <options...>                    - Supply certbot command line options
  adopt <certname...>                     - Convert existing cert to reuse_key
@@ -133,7 +133,7 @@ SYNOPSIS
 
  commands:
   help                                   - Show more help than -h does
-  aliases                                - Show subcommand aliases
+  aliases                                - Show command aliases
 
   certbot <options...>                   - Supply certbot command line options
   adopt <certname...>                    - Convert existing cert to reuse_key
@@ -237,7 +237,7 @@ Danectl can show you this help:
 
   danectl help
 
-You can also show the short aliases for all of the subcommands:
+You can also show the short aliases for all of the commands:
 
   danectl aliases
 
@@ -249,7 +249,7 @@ put spaces inside arguments. It won't end well.
 
   danectl certbot --apache
 
-The "certbot" subcommand modifies your ~/.danectlrc file.
+The "certbot" command modifies your ~/.danectlrc file.
 
 If you already have a certbot certificate lineage, and want to adopt it for
 DANE use, it first needs to be converted to --reuse-key mode:
@@ -287,7 +287,7 @@ but you will need to use it when using certbot directly.
 This will create a symlink in /etc/letsencrypt/next to the duplicate
 certificate lineage.
 
-Most of the remaining subcommands below require the base cert-name as their
+Most of the remaining commands below require the base cert-name as their
 first argument. Not the list of domain names, just the first domain, or
 cert-name, without any "-duplicate" suffix.
 
@@ -303,7 +303,7 @@ They can also be removed:
 
   danectl del-tlsa example.org _110._tcp.mail _143._tcp.mail
 
-The "add-tlsa" and "del-tlsa" subcommands modify your ~/.danectlrc file.
+The "add-tlsa" and "del-tlsa" commands modify your ~/.danectlrc file.
 
 You can also show which port/protocol/host combinations will be included
 for TLSA records:
@@ -339,7 +339,7 @@ They can also be removed:
 
   danectl del-reload example.org postfix # Postfix can look after itself :-)
 
-The "add-reload" and "del-reload" subcommands modify your ~/.danectlrc file.
+The "add-reload" and "del-reload" commands modify your ~/.danectlrc file.
 
 You can also show which services will be reloaded:
 
@@ -1224,7 +1224,7 @@ smimea_check()
 
 if [ $# = 0 ]
 then
-	usage 1 'Missing subcommand' | ${PAGER:-more}
+	usage 1 'Missing command' | ${PAGER:-more}
 	exit 1
 fi
 
@@ -1260,7 +1260,7 @@ do
 	esac
 done
 
-# Handle the subcommands
+# Handle the commands
 
 command="$1"
 [ $# != 0 ] && shift
@@ -1440,12 +1440,12 @@ case "$command" in
 		;;
 
 	'')
-		usage 1 'Missing subcommand' | ${PAGER:-more}
+		usage 1 'Missing command' | ${PAGER:-more}
 		exit 1
 		;;
 
 	*)
-		usage 1 "Unknown subcommand: $command" | ${PAGER:-more}
+		usage 1 "Unknown command: $command" | ${PAGER:-more}
 		exit 1
 		;;
 esac

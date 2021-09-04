@@ -472,8 +472,22 @@ For OPENPGPKEY usage, if your public keyring contains multiple keys with the
 same email address keyid, danectl will only output the first one that gpg
 exports. Let me know if this is a problem.
 
-For SMIMEA usage, only SMIMEA 3 0 0 records are supported. This is not
-really a bug as they seem to be the most useful.
+For SMIMEA usage, only SMIMEA 3 0 0 records are supported. This isn't really
+a bug, as they seem to be the most useful.
+
+Danectl doesn't actually publish or remove any DNS records for you. This
+isn't really a bug. It's a limitation. There are too many ways to publish
+records to the DNS. But danectl does try to make it easy for you to handle
+that yourself by outputting records in the well-known Bind9 zonefile format.
+When performing a TLSA key rollover, and when performing any of the checks,
+any extraneous records that are to be removed are output in the form of
+comments where the leading semicolon (";") is not followed by a space (" ").
+That makes them easy to identify with grep (i.e. grep "^;[^ ]" for
+extraneous records to be removed, and grep -v "^;[^ ]" for missing records
+to be published). Perhaps a plugin system could be added for different DNS
+server software and different DNS service providers, but it should be easy
+enough to write a separate script to read the output of danectl and do what
+you need with it.
 
 REQUIREMENTS
 
@@ -493,8 +507,8 @@ https://www.gnu.org/licenses.
 
 SEE ALSO
 
-certbot(1), danebot(1), ssh(1), ssh_config(5), gpg(1), openssl(1), RFC6698,
-RFC7671, RFC7672, RFC4255, RFC7929, RFC8162.
+certbot(1), danebot(1), ssh(1), ssh_config(5), gpg(1), openssl(1),
+RFC6698, RFC7671, RFC7672, RFC4255, RFC7929, RFC8162.
 
 AUTHOR
 

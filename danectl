@@ -495,8 +495,8 @@ you need with it.
 
 REQUIREMENTS
 
-For TLSA usage, danectl requires /bin/sh, ls, cut, sed, grep, host,
-readlink, certbot, openssl, sha256sum, and root privileges.
+For TLSA usage, danectl requires /bin/sh, ls, sed, grep, host, readlink,
+certbot, openssl, sha256sum, and root privileges.
 
 For SSHFP usage, danectl requires /bin/sh, sed, host, perl, and ssh-keygen.
 
@@ -663,12 +663,10 @@ tlsa_check()
 	[ -z "$tlsa" ] && die "No TLSA records have been configured yet for $certname"
 	hash_current="`tlsa_hash current $certname`"
 	hash_next="`tlsa_hash next $certname`"
-	hash_current_short="`echo $hash_current | cut -c-50`"
-	hash_next_short="`echo $hash_next | cut -c-50`"
 	missing=0
 	for t in $tlsa
 	do
-		if host -t tlsa "$t.$certname" | grep -iq "$hash_current_short"
+		if host -t tlsa "$t.$certname" | grep -iq "$hash_current"
 		then
 			:
 		else
@@ -680,7 +678,7 @@ tlsa_check()
 	missing=0
 	for t in $tlsa
 	do
-		if host -t tlsa "$t.$certname" | grep -iq "$hash_next_short"
+		if host -t tlsa "$t.$certname" | grep -iq "$hash_next"
 		then
 			:
 		else
@@ -692,7 +690,7 @@ tlsa_check()
 	superfluous=0
 	for t in $tlsa
 	do
-		extra="`host -t tlsa \"$t.$certname\" | grep TLSA | sed -e 's/^/;/' -e 's/ has /	/' -e 's/ record /	/' -e 'y/ABCDEF/abcdef/' -e 's/TLSa/TLSA/' -e 's/ \([a-f0-9][a-f0-9]*\)$/\1/' | grep -iv \"$hash_current_short\" | grep -iv \"$hash_next_short\"`"
+		extra="`host -t tlsa \"$t.$certname\" | grep TLSA | sed -e 's/^/;/' -e 's/ has /	/' -e 's/ record /	/' -e 'y/ABCDEF/abcdef/' -e 's/TLSa/TLSA/' -e 's/ \([a-f0-9][a-f0-9]*\)$/\1/' | grep -v \"$hash_current\" | grep -v \"$hash_next\"`"
 		if [ -n "$extra" ]
 		then
 			[ "$superfluous" = 0 ] && echo ";; Superfluous $certname (should be removed)"
@@ -915,7 +913,7 @@ check_prerequisites()
 	[ ! -d "$le/current" ] && mkdir "$le/current"
 	[ ! -d "$le/next" ] && mkdir "$le/next"
 
-	for cmd in ls cut sed grep host readlink certbot openssl sha256sum
+	for cmd in ls sed grep host readlink certbot openssl sha256sum
 	do
 		case "`which $cmd`" in /*) ;; *) die "Failed to find $cmd";; esac
 	done
@@ -923,8 +921,8 @@ check_prerequisites()
 	if [ -e "$danectlrc" ]
 	then
 		[ ! -O "$danectlrc" ] && die "$danectlrc is not owned by root"
-		case "`ls -lL \"$danectlrc\" | cut -c-10`" in
-			-rw-r--r--|-rw-r-----|-rw-------)
+		case "`ls -lL \"$danectlrc\"`" in
+			-rw-r--r--*|-rw-r-----*|-rw-------*)
 				;;
 			*)
 				die "$danectlrc is group- or world-writable"

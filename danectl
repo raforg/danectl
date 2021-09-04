@@ -40,7 +40,7 @@ umask 022
 usage()
 {
 	local rc="$1"; shift
-	[ -z "$@" ] || echo "$name: $@" >&2
+	[ -z "$@" ] || echo "$name: $@"
 	cat << USAGE
 usage: $name [options] command [arg...]
 
@@ -523,7 +523,6 @@ URL
   $git
 
 HELP
-	exit 0
 }
 
 die() { echo "$name: $@" >&2; exit 1; }
@@ -1223,7 +1222,11 @@ smimea_check()
 
 # Handle any command line options
 
-[ $# = 0 ] && usage 0 | ${PAGER:-more}
+if [ $# = 0 ]
+then
+	usage 1 'Missing subcommand' | ${PAGER:-more}
+	exit 1
+fi
 
 while :
 do
@@ -1260,7 +1263,7 @@ done
 # Handle the subcommands
 
 command="$1"
-shift
+[ $# != 0 ] && shift
 
 case "$command" in
 	help|h)
@@ -1436,8 +1439,14 @@ case "$command" in
 		echo "aliases: a"
 		;;
 
+	'')
+		usage 1 'Missing subcommand' | ${PAGER:-more}
+		exit 1
+		;;
+
 	*)
-		die "Unknown subcommand: $command"
+		usage 1 "Unknown subcommand: $command" | ${PAGER:-more}
+		exit 1
 		;;
 esac
 

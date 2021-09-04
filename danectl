@@ -692,7 +692,7 @@ tlsa_check()
 	superfluous=0
 	for t in $tlsa
 	do
-		extra="`host -t tlsa \"$t.$certname\" | grep TLSA | grep -iv \"$hash_current_short\" | grep -iv \"$hash_next_short\" | sed -e 's/^/;/' -e 's/has //' -e 's/record //' -e 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/'`"
+		extra="`host -t tlsa \"$t.$certname\" | grep TLSA | sed -e 's/^/;/' -e 's/ has /	/' -e 's/ record /	/' -e 'y/ABCDEF/abcdef/' -e 's/TLSa/TLSA/' -e 's/ \([a-f0-9][a-f0-9]*\)$/\1/' | grep -iv \"$hash_current_short\" | grep -iv \"$hash_next_short\"`"
 		if [ -n "$extra" ]
 		then
 			[ "$superfluous" = 0 ] && echo ";; Superfluous $certname (should be removed)"

@@ -226,7 +226,9 @@ Verbose mode. Print actions before performing them.
 
 -q, --quiet
 
-Quiet mode. Pass -q to certbot.
+Quiet mode. Pass -q to certbot. This only affects the "new", "dup", and
+"rollover" commands, and is probably a good idea, as it makes the output
+tidier.
 
 -n, --test
 
@@ -492,8 +494,8 @@ to be published). Perhaps a plugin system could be added to automate updates
 for different DNS server software and different DNS service providers, but
 it should be easy enough to write a separate script to read the output of
 danectl and do what you need with it. And anyway, DANE-related DNS updates
-probably aren't frequent enough for their automation to be important. Of
-course, your mileage may vary.
+probably won't be frequent enough for their automation to be important. But
+of course, your mileage may vary.
 
 REQUIREMENTS
 

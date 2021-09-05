@@ -214,25 +214,28 @@ OPTIONS
 
 -h, --help
 
-Show a short help message.
+This outputs danectl's usage message, then exits.
 
 -V, --version
 
-Show the name and version.
+This outputs danectl's name and version, then exits.
 
 -v, --verbose
 
-Verbose mode. Print actions before performing them.
+This enables verbose mode, causing danectl to print actions before
+performing them.
 
 -q, --quiet
 
-Quiet mode. Pass -q to certbot. This only affects the "new", "dup", and
-"rollover" commands, and is probably a good idea, as it makes the output
-tidier.
+This enables quiet mode, causing danectl to pass -q to certbot. This only
+affects the "new", "dup", and "rollover" commands, and is probably a good
+idea, as it makes the output tidier.
 
 -n, --test
 
-Test mode. Don't perform any changes. Implies verbose mode.
+This enables test mode, preventing danectl from performing any changes. It
+implies verbose mode, causing danectl to print the actions that would have
+been performed.
 
 COMMANDS
 

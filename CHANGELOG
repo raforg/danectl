@@ -1,6 +1,22 @@
 CHANGELOG
 =========
 
+0.6 (20210906)
+
+    - Make all reporting of extraneous records greppable zonefile comments
+    - Support non-GNU sed that doesn't handle 's/ /\t/'
+    - Make rollover reporting of old records to remove greppable zonefile comments
+    - Change "extraneous" term to the more accurate "superfluous"
+    - Add author/url/git variables to remove duplication
+    - Improve handling of invalid command line usage
+    - Make tlsa-check superfluous record output slightly nicer (remove space)
+    - Change "subcommand" term to "command"
+    - Make tlsa-check superfluous record output prettier
+    - Remove cut prerequisite
+    - Add RR name terminating dot where missing
+    - Add certname and terminating dot to TLSA RR name for rollover and tlsa-check
+    - Documentation improvements
+
 0.5 (20210903)
 
     - Add OPENPGPKEY (openpgpkey and openpgpkey-check subcommands)
@@ -61,7 +77,7 @@ CHANGELOG
 
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
-    Date: 20210903
+    Date: 20210906
     Author: raf <raf@raf.org>
 
 

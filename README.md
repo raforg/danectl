@@ -101,8 +101,8 @@ SMIMEA records, and check that they are published.
 
 To install danectl:
 
-    tar xzf danectl-0.5.tar.gz
-    cd danectl-0.5
+    tar xzf danectl-0.6.tar.gz
+    cd danectl-0.6
     make install
 
 This will install:
@@ -133,6 +133,6 @@ For SMIMEA usage, danectl requires /bin/sh, perl, and openssl.
 
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
-    Date: 20210903
+    Date: 20210906
     Author: raf <raf@raf.org>
 

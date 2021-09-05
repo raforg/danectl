@@ -35,7 +35,7 @@ le=/etc/letsencrypt
 danectlrc="$HOME/.danectlrc"
 umask 022
 
-# The short -h --help usage message
+# The --help usage message
 
 usage()
 {

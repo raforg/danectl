@@ -18,10 +18,11 @@ checks that they are correctly published, and performs key rollovers.
 # DESCRIPTION
 
 Danectl lets you create a pair of certbot certificate lineages to be used
-with DANE. They are referred to as the "original" and the "duplicate", or
-as the "current" and the "next". The current and next will repeatedly swap
-places between the original and the duplicate as the key rolls over from
-one to the other (with a new "next" key created after each rollover).
+with DANE-aware TLS clients. They are referred to as the "original" and the
+"duplicate", or as the "current" and the "next". The current and next will
+repeatedly swap places between the original and the duplicate as the key
+rolls over from one to the other (with a new "next" key being created after
+each rollover).
 
     danectl new example.org www.example.org mail.example.org
     danectl dup example.org www.example.org mail.example.org
@@ -33,6 +34,10 @@ existing one for DANE use, and then just create the duplicate.
     danectl adopt example.org
     danectl dup example.org www.example.org mail.example.org
 
+After that, certbot automatically renews both certificates every few months,
+but the underlying keypairs won't change, and the TLSA records (see below)
+can remain stable.
+
 You then configure danectl with the set of port/protocol/host combinations
 that you need TLSA records for.
 
@@ -42,8 +47,8 @@ that you need TLSA records for.
     danectl add-tlsa example.org _993._tcp.mail _995._tcp.mail
     danectl del-tlsa example.org _110._tcp.mail _143._tcp.mail
 
-Danectl can then print out the TLSA records, in zonefile format, and you
-need to publish them to the DNS (somehow).
+Danectl can then output the TLSA records, in zonefile format, and you need
+to publish them to the DNS (somehow).
 
     danectl tlsa-current example.org
     danectl tlsa-next example.org
@@ -52,8 +57,8 @@ Danectl can then check that the TLSA records have been published to the DNS.
 
     danectl tlsa-check example.org
 
-You also need to configure danectl with the list of services that need to be
-reloaded when the key rolls over.
+You also need to configure danectl with the list of TLS services that need
+to be reloaded when the key rolls over.
 
     danectl add-reload example.org apache2 postfix dovecot
     danectl del-reload example.org postfix
@@ -61,16 +66,15 @@ reloaded when the key rolls over.
 This is needed even when certbot is configured to do it with deploy hooks,
 because those hooks are only run when a certificate is renewed. Service
 reloads also need to happen when there's a DANE key rollover, and that
-doesn't happen at the same time as automatic certbot certificate renewals.
+doesn't necessarily happen at the same time as automatic certbot certificate
+renewals.
 
-You then need to configure your services to use the "current" certificate in
-/etc/letsencrypt/current, and then reload them.
+You then need to configure your TLS services to use the "current"
+certificate in /etc/letsencrypt/current, and then reload them. This is like
+following instructions for using a certbot certificate, but replacing "live"
+with "current".
 
     Left as an exercise for the reader
-
-After that, certbot automatically renews certificates every three months,
-but the underlying keypair doesn't change, and the TLSA records can remain
-stable.
 
 Periodically, you can perform key rollovers on a schedule that suits you
 (e.g. annually). An emergency key rollover is exactly the same.
@@ -79,7 +83,7 @@ Periodically, you can perform key rollovers on a schedule that suits you
 
 At any time, you can show the status (which certificate lineages are
 current, which are next, which new TLSA records are not yet published, and
-which old TLSA records are not yet removed).
+which old TLSA records have not yet been removed).
 
     danectl status
 

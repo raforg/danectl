@@ -45,18 +45,18 @@ usage()
 usage: $name [options] command [arg...]
 
 options:
- -h, --help                              - Show a short help message
+ -h, --help                              - Show the usage message
  -V, --version                           - Show the name and version
  -v, --verbose                           - Verbose mode (announce actions)
  -q, --quiet                             - Quiet mode (pass -q to certbot)
- -n, --test                              - Test mode (don't do things)
+ -n, --test                              - Test mode (don't change things)
 
 commands:
- help                                    - Show more help than -h does
- aliases                                 - Show command aliases
+ help                                    - Show the manual page
+ aliases                                 - Show the command aliases
 
  certbot <options...>                    - Supply certbot command line options
- adopt <certname...>                     - Convert existing cert to reuse_key
+ adopt <certname...>                     - Adopt an existing cert as current
  new <domain...>                         - Create a new original/current cert
  dup <domain...>                         - Create a new duplicate/next cert
  add-tlsa <certname> <_#._tcp[.host]...> - Add port/pro/host for TLSA output
@@ -80,9 +80,9 @@ commands:
  smimea-check <smimecert.pem>            - Check SMIMEA RR is published
 
 Danectl is a DNSSEC DANE implementation manager. It uses certbot to create
-and manage a pair of keys for use with a TLSA 3 1 1 current + next workflow.
-It generates TLSA records for your TLS services for you to publish to the DNS,
-checks that they are correctly published, and performs key rollovers.
+and manage pairs of keys for use with a TLSA 3 1 1 current + next workflow.
+It generates TLSA records for your TLS services for you to publish to the
+DNS, checks that they are correctly published, and performs key rollovers.
 
 Danectl can also generate and check SSHFP records for the local SSH server.
 Danectl can also generate and check an OPENPGPKEY record for a GnuPG key.
@@ -125,18 +125,18 @@ SYNOPSIS
  usage: $name [options] command [arg...]
 
  options:
-  -h, --help                             - Show a short help message
+  -h, --help                             - Show the usage message
   -V, --version                          - Show the name and version
   -v, --verbose                          - Verbose mode (announce actions)
   -q, --quiet                            - Quiet mode (pass -q to certbot)
-  -n, --test                             - Test mode (don't do things)
+  -n, --test                             - Test mode (don't change things)
 
  commands:
-  help                                   - Show more help than -h does
-  aliases                                - Show command aliases
+  help                                   - Show the manual page
+  aliases                                - Show the command aliases
 
   certbot <options...>                   - Supply certbot command line options
-  adopt <certname...>                    - Convert existing cert to reuse_key
+  adopt <certname...>                    - Adopt an existing cert as current
   new <domain...>                        - Create a new original/current cert
   dup <domain...>                        - Create a new duplicate/next cert
   add-tlsa <certname> <_#._tcp[.host]..> - Add port/pro/host for TLSA output
@@ -162,9 +162,10 @@ SYNOPSIS
 INTRODUCTION
 
 Danectl is a DNSSEC DANE implementation manager. It uses certbot to create
-and manage a pair of keys for use with a TLSA 3 1 1 current + next workflow.
-It generates TLSA records for your TLS services for you to publish to the DNS,
-checks that they are correctly published, and performs key rollovers.
+and manage pairs of keys for use with a TLSA 3 1 1 current + next workflow.
+It generates TLSA records for your TLS services for you to publish to the
+DNS, checks that they are correctly published, and performs key rollovers.
+
 Danectl can also generate and check SSHFP records for the local SSH server.
 Danectl can also generate and check an OPENPGPKEY record for a GnuPG key.
 Danectl can also generate and check an SMIMEA record for an S/MIME certificate.
@@ -172,40 +173,43 @@ Danectl can also generate and check an SMIMEA record for an S/MIME certificate.
 DESCRIPTION
 
 Danectl lets you create a pair of certbot certificate lineages to be used
-with DANE. They are referred to as the "original" and the "duplicate", or
-as the "current" and the "next". The current and next will repeatedly swap
-places between the original and the duplicate as the key rolls over from
-one to the other (with a new "next" key created after each rollover).
+with DANE-aware TLS clients. They are referred to as the "original" and the
+"duplicate", or as the "current" and the "next". The current and next will
+repeatedly swap places between the original and the duplicate as the key
+rolls over from one to the other (with a new "next" key being created after
+each rollover).
 
 If you already have a certbot certificate lineage that you want to use with
 DANE, then instead of creating both certificate lineages, you can adopt the
 existing one for DANE use, and then just create the duplicate.
 
-You then configure danectl with the set of port/protocol/host combinations
-that you need TLSA records for. Danectl can then print out the TLSA records,
-in zonefile format, and you need to publish them to the DNS (somehow).
-Danectl can then check that the TLSA records have been published to the DNS.
+After that, certbot automatically renews both certificates every few months,
+but the underlying keypairs won't change, and the TLSA records (see below)
+can remain stable.
 
-You also need to configure danectl with the list of services that need to be
-reloaded when the key rolls over. This is needed even when certbot is
+You then configure danectl with the set of port/protocol/host combinations
+that you need TLSA records for. Danectl can then output the TLSA records, in
+zonefile format, and you need to publish them to the DNS (somehow). Danectl
+can then check that the TLSA records have been published to the DNS.
+
+You also need to configure danectl with the list of TLS services that need
+to be reloaded when the key rolls over. This is needed even when certbot is
 configured to do it with deploy hooks, because those hooks are only run when
 a certificate is renewed. Service reloads also need to happen when there's a
-DANE key rollover, and that doesn't happen at the same time as automatic
-certbot certificate renewals.
+DANE key rollover, and that doesn't necessarily happen at the same time as
+automatic certbot certificate renewals.
 
-You then need to configure your services to use the "current" certificate in
-/etc/letsencrypt/current/<cert-name>, and then reload them.
-
-After that, certbot automatically renews certificates every three months,
-but the underlying keypair doesn't change, and the TLSA records can remain
-stable.
+You then need to configure your TLS services to use the "current"
+certificate in /etc/letsencrypt/current/<cert-name>, and then reload them.
+This is like following instructions for using a certbot certificate, but
+replacing "live" with "current".
 
 Periodically, you can perform key rollovers on a schedule that suits you
 (e.g. annually). An emergency key rollover is exactly the same.
 
 At any time, you can show the status (which certificate lineages are
 current, which are next, which new TLSA records are not yet published, and
-which old TLSA records are not yet removed).
+which old TLSA records have not yet been removed).
 
 In addition to TLSA records, you can also generate SSHFP, OPENPGPKEY, and
 SMIMEA records, and check that they are published.
@@ -239,11 +243,11 @@ been performed.
 
 COMMANDS
 
-Danectl can show you this help:
+Danectl can show you this manual page:
 
   danectl help
 
-You can also show the short aliases for all of the commands:
+You can also show the aliases for all of the commands:
 
   danectl aliases
 
@@ -257,8 +261,8 @@ put spaces inside arguments. It won't end well.
 
 The "certbot" command modifies your ~/.danectlrc file.
 
-If you already have a certbot certificate lineage, and want to adopt it for
-DANE use, it first needs to be converted to --reuse-key mode:
+If you already have a certbot certificate lineage, you can adopt it for DANE
+use:
 
   danectl adopt example.org
 
@@ -269,7 +273,8 @@ To see all of your cert-names, run "certbot certificates", or look in
 This will create a symlink in /etc/letsencrypt/current to the adopted
 certificate lineage.
 
-If you want to create a new certbot certificate lineage for DANE instead:
+If you want to create a new certbot certificate lineage for DANE use
+instead:
 
   danectl new example.org www.example.org mail.example.org
 
@@ -293,6 +298,11 @@ but you will need to use it when using certbot directly.
 This will create a symlink in /etc/letsencrypt/next to the duplicate
 certificate lineage.
 
+Once a pair of certificate lineages is set up, certbot will automatically
+renew them both, but the underlying keypairs won't change. That means that
+the TLSA records (see below) can remain stable for longer than just a few
+months.
+
 Most of the remaining commands below require the base cert-name as their
 first argument. Not the list of domain names, just the first domain, or
 cert-name, without any "-duplicate" suffix.
@@ -304,6 +314,9 @@ records for:
   danectl add-tlsa example.org _25._tcp.mail _465._tcp.mail _587._tcp.mail
   danectl add-tlsa example.org _110._tcp.mail _143._tcp.mail
   danectl add-tlsa example.org _993._tcp.mail _995._tcp.mail
+
+Do not include the base cert-name in the port/protocol/host combinations.
+That will be included automatically.
 
 They can also be removed:
 
@@ -359,28 +372,25 @@ the key rolls over:
 But this shouldn't be necessary. It's automatic when a key rolls over.
 Although it might be useful in certbot renewal hooks.
 
-Once a pair of certificate lineages are set up, certbot will automatically
-renew them both, but the underlying keypairs won't change. That means that
-the TLSA records can remain stable for longer than three months.
-
 Occasionally (e.g. annually), perform a key rollover:
 
   danectl rollover example.org
 
-This will redesignate the next key as the current key, reload services, and
-create a new keypair/certificate as the new next key. It also prints the old
-TLSA records for the old current key that you need to remove from the DNS
-(somehow). And it prints the new TLSA records for the new next key that you
-need to publish in the DNS (somehow).
+This will redesignate the next key as the current key (and vice versa),
+reload affected services, and create a new keypair/certificate as the new
+next key. It also outputs the old TLSA records for the old current key that
+you need to remove from the DNS (somehow). And it outputs the new TLSA
+records for the new next key that you need to publish in the DNS (somehow).
 
 At any time, you can show the status of all certificate pairs:
 
   danectl status
 
 This will show, for each base cert-name, which certificate lineage is
-current, and which is next. It will also show any TLSA records that should
-be, but are not, published in the DNS. It will also show any TLSA records
-that are published in the DNS, but should not be.
+current (original or duplicate), and which is next. It will also show any
+new TLSA records that should be, but are not, published in the DNS. It will
+also show any old TLSA records that are published in the DNS, but should no
+longer be.
 
 If any of the symlinks in /etc/letsencrypt/{current,next} target certificate
 lineages that no longer exist in /etc/letsencrypt/live, this is also
@@ -432,11 +442,10 @@ the DNS:
 
 FILES
 
-  /etc/letsencrypt         - Certbot installation
-  /etc/letsencrypt/live    - Certificate lineages
+  /etc/letsencrypt/live    - Certbot certificate lineages
   /etc/letsencrypt/current - Current keypairs/certificates
   /etc/letsencrypt/next    - Next keypairs/certificates
-  ~/.danectlrc             - Configuration for danectl
+  ~/.danectlrc             - Configuration file
 
 The ~/.danectlrc configuration file is technically a shell script.
 But danectl's additions and removals are purely a single name="value"
@@ -482,14 +491,14 @@ same email address keyid, danectl will only output the first one that gpg
 exports. Let me know if this is a problem.
 
 For SMIMEA usage, only SMIMEA 3 0 0 records are supported. This isn't really
-a bug, as they seem to be the most useful.
+a bug, as they seem to be the most/only useful ones.
 
 Danectl doesn't actually publish or remove any DNS records for you. This
 isn't really a bug. It's a limitation. There are too many ways to publish
 records to the DNS. But danectl does try to make it easy for you to handle
 that yourself by outputting records in the well-known Bind9 zonefile format.
-When performing a TLSA key rollover, and when performing any of the checks,
-any superfluous records that are to be removed are output in the form of
+When performing a key rollover, and when performing any of the checks, any
+superfluous records that are to be removed are output in the form of
 comments where the leading semicolon (";") is not followed by a space (" ").
 That makes them easy to identify with grep (i.e. grep "^;[^ ]" for
 superfluous records to be removed, and grep -v "^;[^ ]" for missing records
@@ -1157,11 +1166,11 @@ smimea()
 	openssl x509 -inform pem -in "$cert" -outform der | perl -e '
 		use strict;
 		use warnings;
+		use Digest;
 		binmode(STDIN);
 		$/ = undef;
 		my $cert = unpack("H*", <STDIN>);
 		$cert =~ s/(.{1,56})/\t$1\n/g;
-		use Digest;
 		my $email = q('"$email"');
 		my ($localpart, $domain) = $email =~ /^([^@]+)@([^@]+)$/;
 		die("'$name': Invalid email address: $email\n") unless defined $localpart && defined $domain;
@@ -1192,11 +1201,11 @@ smimea_check()
 	openssl x509 -inform pem -in "$cert" -outform der | perl -e '
 		use strict;
 		use warnings;
+		use Digest;
 		binmode(STDIN);
 		$/ = undef;
 		my $cert = unpack("H*", <STDIN>);
 		$cert =~ s/(.{1,56})/\t$1\n/g;
-		use Digest;
 		my $email = q('"$email"');
 		my ($localpart, $domain) = $email =~ /^([^@]+)@([^@]+)$/;
 		die("'$name': Invalid email address: $email\n") unless defined $localpart && defined $domain;
@@ -1205,8 +1214,6 @@ smimea_check()
 		my $comment = "; $email\n";
 		my $prefix = substr($hash->hexdigest(), 0, 28 * 2);
 		my $origin = "_smimecert.$domain.";
-		#print("; $email\n");
-		#print("$prefix.$origin\tIN\tSMIMEA\t(\n\t3 0 0\n$cert\t)\n");
 		my $missing = 1;
 		my $superfluous = "";
 		for (grep { /has SMIMEA record/ } split /\n/, `host -t smimea "$prefix.$origin"`)
@@ -1256,6 +1263,12 @@ do
 			verbose=1
 			test=1
 			shift
+			;;
+		--)
+			shift
+			;;
+		--*)
+			die "Unknown option $1"
 			;;
 		-*)
 			die "Unknown option $1 (or unsupported option bundling)"

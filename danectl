@@ -553,17 +553,16 @@ certbot_options()
 	set_rc certbot_options "$options"
 }
 
-# Convert existing cert to reuse_key
+# Adopt an existing cert as current
 
 adopt()
 {
 	local certname="$@"
 	fname="$le/renewal/$certname.conf"
-	line="reuse_key = True"
 	[ -f "$fname" ] || die "adopt $certname: Failed to find renewal config file $fname"
 	[ -e "$le/current/$certname" -o -e "$le/next/$certname" ] && die "adopt $certname: Already adopted"
-	grep -q "$line" "$fname" && die "adopt $certname: Already in reuse_key mode"
-	add_line "$fname" "$line"
+	grep -q reuse_key "$fname" && del_line "$fname" reuse_key
+	add_line "$fname" "reuse_key = True"
 	run ln -s "$le/live/$certname" "$le/current/$certname"
 }
 
@@ -804,7 +803,7 @@ rollover()
 	echo ";; Remove the following old records from the DNS"
 	tlsa_next "$certname" previous ";"
 	# Create the new next keypair/certificate
-	del_line "$le/renewal/$certname$next.conf" "reuse_key ="
+	del_line "$le/renewal/$certname$next.conf" reuse_key
 	run certbot renew$quiet --force-renewal --cert-name "$certname$next"
 	rc=$?
 	add_line "$le/renewal/$certname$next.conf" "reuse_key = True"

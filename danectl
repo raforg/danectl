@@ -572,6 +572,7 @@ new()
 {
 	local certname="$1"
 	local domains="$@"
+	certname="`echo $certname | sed 's/ .*$//'`"
 	domains="`echo $domains | sed 's/ /,/g'`"
 	[ -d "$le/live/$certname" ] && die "new $certname: Already exists"
 	run certbot run$quiet ${certbot_options:---apache} --reuse-key -d "$domains"
@@ -586,6 +587,7 @@ dup()
 {
 	local certname="$1"
 	local domains="$@"
+	certname="`echo $certname | sed 's/ .*$//'`"
 	domains="`echo $domains | sed 's/ /,/g'`"
 	[ ! -d "$le/live/$certname" ] && die "dup $certname: Failed to find live original $certname"
 	[ ! -d "$le/current/$certname" ] && die "dup $certname: Failed to find current original $certname"

@@ -55,7 +55,7 @@ commands:
  help                                    - Show the manual page
  aliases                                 - Show the command aliases
 
- certbot <options...>                    - Supply certbot command line options
+ certbot <options...>                    - Supply certbot auth/install details
  adopt <certname...>                     - Adopt an existing cert as current
  new <domain...>                         - Create a new original/current cert
  dup <domain...>                         - Create a new duplicate/next cert
@@ -135,7 +135,7 @@ SYNOPSIS
   help                                   - Show the manual page
   aliases                                - Show the command aliases
 
-  certbot <options...>                   - Supply certbot command line options
+  certbot <options...>                   - Supply certbot auth/install details
   adopt <certname...>                    - Adopt an existing cert as current
   new <domain...>                        - Create a new original/current cert
   dup <domain...>                        - Create a new duplicate/next cert
@@ -205,7 +205,7 @@ This is like following instructions for using a certbot certificate, but
 replacing "live" with "current".
 
 Periodically, you can perform key rollovers on a schedule that suits you
-(e.g. annually). An emergency key rollover is exactly the same.
+(e.g., annually). An emergency key rollover is exactly the same.
 
 At any time, you can show the status (which certificate lineages are
 current, which are next, which new TLSA records are not yet published, and
@@ -251,13 +251,41 @@ You can also show the aliases for all of the commands:
 
   danectl aliases
 
-Before you can use danectl to do anything interesting, you might need to
-supply any command line options that certbot will need when it creates new
-certificate lineages. This is for authentication and installation. The
-default is "--apache" to use the Apache plugin. Don't use quotes and don't
-put spaces inside arguments. It won't end well.
+Before you can use danectl to do anything interesting for TLS, you might
+need to supply any command line options that certbot will need when it
+creates new certificate lineages. This is for authentication and
+installation. Don't use quotes and don't put spaces inside arguments
+(e.g., webroot paths must not contain spaces).
 
   danectl certbot --apache
+
+The default is "--apache" to use the apache plugin, if /etc/apache2 exists.
+Otherwise, the default is "--nginx" to use the nginx plugin, if /etc/nginx
+exists. Otherwise, the default is "--standalone" to use the standalone
+plugin.
+
+When the apache or nginx plugin is used, the default certbot command used is
+"run", which installs the certificate lineage to the web server
+configuration after authentication. Otherwise, the default certbot command
+used is "certonly", which only authenticates, and doesn't install the
+certificate lineage to any web webserver configuration. This only applies to
+danectl's "new" command (see below). Danectl's "dup" command (see below)
+always uses certbot's "certonly" command.
+
+Certbot's "run" command must only be used when the new certificate is to be
+installed. Otherwise, certbot's "certonly" command must be used instead. If
+danectl's default certbot command is wrong for your needs, you can override
+it by putting "run" or "certonly" before any other certbot command line
+options.
+
+This might be useful if you have apache or nginx, but don't want the
+certificate installed automatically, or if you use a third-party plugin that
+is capable of installing the certificate, but danectl doesn't know that.
+Danectl assumes that all third-party plugins do not install, but that isn't
+always true.
+
+  danectl certbot certonly --nginx
+  danectl certbot run --third-party-plugin-details
 
 The "certbot" command modifies your ~/.danectlrc file.
 
@@ -372,7 +400,7 @@ the key rolls over:
 But this shouldn't be necessary. It's automatic when a key rolls over.
 Although it might be useful in certbot renewal hooks.
 
-Occasionally (e.g. annually), perform a key rollover:
+Occasionally (e.g., annually), perform a key rollover:
 
   danectl rollover example.org
 
@@ -455,7 +483,7 @@ CAVEAT
 
 If you need to add or remove any domains from a pair of certificate
 lineages, you will need to do it with certbot, and you will need to do it
-for both the original and the duplicate certificate lineages (e.g.
+for both the original and the duplicate certificate lineages (e.g.,
 example.org and example.org-duplicate), and you will need to use certbot's
 --cert-name command line option. Since there will be two certificate
 lineages with the same set of domains, it would be ambiguous otherwise.
@@ -545,11 +573,15 @@ HELP
 die() { echo "$name: $@" >&2; exit 1; }
 warn() { echo "$name: $@" >&2; }
 
-# Supply certbot command line options
+# Supply certbot auth/install details
 
 certbot_options()
 {
+	local command=""
+	case "$1" in *\ *) die "certbot command argument contains space (remove quotes)";; esac
+	case "$1" in run|certonly) command="$1"; shift;; esac
 	local options="$@"
+	set_rc certbot_command "$command"
 	set_rc certbot_options "$options"
 }
 
@@ -566,6 +598,35 @@ adopt()
 	run ln -s "$le/live/$certname" "$le/current/$certname"
 }
 
+# Default certbot authentication/installation plugin
+
+default_certbot_plugin()
+{
+	if [ -d /etc/apache2 ]
+	then
+		echo --apache
+	elif [ -d /etc/nginx ]
+	then
+		echo --nginx
+	else
+		echo --standalone
+	fi
+}
+
+# Default certbot command
+
+default_certbot_command()
+{
+	case "${certbot_options:-`default_certbot_plugin`}" in
+		*--apache*|*--nginx*)
+			echo run
+			;;
+		*)
+			echo certonly
+			;;
+	esac
+}
+
 # Create a new original/current cert
 
 new()
@@ -575,7 +636,7 @@ new()
 	certname="`echo $certname | sed 's/ .*$//'`"
 	domains="`echo $domains | sed 's/ /,/g'`"
 	[ -d "$le/live/$certname" ] && die "new $certname: Already exists"
-	run certbot run$quiet ${certbot_options:---apache} --reuse-key -d "$domains"
+	run certbot "${certbot_command:-`default_certbot_command`}"$quiet ${certbot_options:-`default_certbot_plugin`} --reuse-key -d "$domains"
 	[ $test = 0 -a $? != 0 ] && die "new $certname: certbot failed"
 	[ $test = 0 -a ! -d "$le/live/$certname" ] && die "new $certname: certbot failed"
 	run ln -s "$le/live/$certname" "$le/current/$certname"
@@ -592,7 +653,7 @@ dup()
 	[ ! -d "$le/live/$certname" ] && die "dup $certname: Failed to find live original $certname"
 	[ ! -d "$le/current/$certname" ] && die "dup $certname: Failed to find current original $certname"
 	[ -d "$le/live/$certname-duplicate" ] && die "dup $certname: Duplicate $certname-duplicate already exists"
-	run certbot certonly$quiet ${certbot_options:---apache} --duplicate --reuse-key --cert-name "$certname-duplicate" -d "$domains"
+	run certbot certonly$quiet ${certbot_options:-`default_certbot_plugin`} --duplicate --reuse-key --cert-name "$certname-duplicate" -d "$domains"
 	[ $test = 0 -a $? != 0 ] && die "dup $certname: certbot failed"
 	[ $test = 0 -a ! -d "$le/live/$certname-duplicate" ] && die "dup $certname: certbot failed"
 	run ln -s "$le/live/$certname-duplicate" "$le/next/$certname"
@@ -925,7 +986,7 @@ shcertname()
 
 check_prerequisites()
 {
-	[ -d "$le" ] || die "Failed to find $le"
+	[ -d "$le" ] || die "Failed to find $le (install certbot)"
 	[ -w "$le" ] || die "Unable to write to $le (use sudo)"
 	[ ! -d "$le/current" ] && mkdir "$le/current"
 	[ ! -d "$le/next" ] && mkdir "$le/next"

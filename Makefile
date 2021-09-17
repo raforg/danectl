@@ -63,10 +63,10 @@ install-man: $(DANECTL_MANFILE)
 uninstall: uninstall-bin uninstall-man
 
 uninstall-bin:
-	rm -r $(APP_INSDIR)/$(DANECTL_NAME)
+	[ ! -f $(APP_INSDIR)/$(DANECTL_NAME) ] || rm -r $(APP_INSDIR)/$(DANECTL_NAME)
 
 uninstall-man:
-	rm -r $(APP_MANDIR)/$(DANECTL_MANFILE)
+	[ ! -f $(APP_MANDIR)/$(DANECTL_MANFILE) ] || rm -r $(APP_MANDIR)/$(DANECTL_MANFILE)
 
 %.$(APP_MANSECT): %
 	./$< help | perl -pe 's/^([A-Z ]+)$$/=head1 $$1/' | pod2man --section='$(APP_MANSECT)' --center='$(APP_MANSECTNAME)' --name='$(shell echo $(DANECTL_NAME) | tr a-z A-Z)' --release='$(DANECTL_ID)' --date='$(DANECTL_DATE)' --quotes=none > $@

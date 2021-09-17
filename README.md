@@ -129,6 +129,8 @@ For OPENPGPKEY usage, danectl requires /bin/sh, perl, and gpg.
 
 For SMIMEA usage, danectl requires /bin/sh, perl, and openssl.
 
+On systems like Solaris, /usr/xpg4/bin/sh is used instead of /bin/sh.
+
 --------------------------------------------------------------------------------
 
     URL: https://raf.org/danectl

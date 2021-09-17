@@ -40,7 +40,7 @@ umask 022
 usage()
 {
 	local rc="$1"; shift
-	[ -z "$@" ] || echo "$name: $@"
+	[ -z "$*" ] || echo "$name: $*"
 	cat << USAGE
 usage: $name [options] command [arg...]
 
@@ -580,7 +580,7 @@ certbot_options()
 	local command=""
 	case "$1" in *\ *) die "certbot command argument contains space (remove quotes)";; esac
 	case "$1" in run|certonly) command="$1"; shift;; esac
-	local options="$@"
+	local options="$*"
 	set_rc certbot_command "$command"
 	set_rc certbot_options "$options"
 }
@@ -589,7 +589,7 @@ certbot_options()
 
 adopt()
 {
-	local certname="$@"
+	local certname="$*"
 	fname="$le/renewal/$certname.conf"
 	[ -f "$fname" ] || die "adopt $certname: Failed to find renewal config file $fname"
 	[ -e "$le/current/$certname" -o -e "$le/next/$certname" ] && die "adopt $certname: Already adopted"
@@ -632,7 +632,7 @@ default_certbot_command()
 new()
 {
 	local certname="$1"
-	local domains="$@"
+	local domains="$*"
 	certname="`echo $certname | sed 's/ .*$//'`"
 	domains="`echo $domains | sed 's/ /,/g'`"
 	[ -d "$le/live/$certname" ] && die "new $certname: Already exists"
@@ -647,7 +647,7 @@ new()
 dup()
 {
 	local certname="$1"
-	local domains="$@"
+	local domains="$*"
 	certname="`echo $certname | sed 's/ .*$//'`"
 	domains="`echo $domains | sed 's/ /,/g'`"
 	[ ! -d "$le/live/$certname" ] && die "dup $certname: Failed to find live original $certname"
@@ -921,7 +921,7 @@ run()
 add_line()
 {
 	local fname="$1"; shift
-	local line="$@";
+	local line="$*"
 	line="`echo $line | sed -e 's/\s+/ /g' -e 's/^ //' -e 's/ $//'`"
 	[ $verbose = 1 ] && echo "Add \"$line\" to $fname"
 	[ $test = 0 ] && echo "$line" >> "$fname"
@@ -932,7 +932,7 @@ add_line()
 del_line()
 {
 	local fname="$1"; shift
-	local line="$@";
+	local line="$*"
 	[ $verbose = 1 ] && echo "Remove \"$line\" from $fname"
 	[ $test = 1 ] && return
 	grep -v "^$line" "$fname" > "$fname.tmp.$$"
@@ -960,7 +960,7 @@ del_rc()
 set_rc()
 {
 	local name="$1"; shift
-	local value="$@"
+	local value="$*"
 	value="`echo \"$value\" | sed -e 's/^ //'`"
 	del_rc "$name="
 	add_rc "$name=\"$value\""

@@ -39,7 +39,7 @@ umask 022
 
 usage()
 {
-	local rc="$1"; shift
+	rc="$1"; shift
 	[ -z "$*" ] || echo "$name: $*"
 	cat << USAGE
 usage: $name [options] command [arg...]
@@ -577,10 +577,10 @@ warn() { echo "$name: $@" >&2; }
 
 certbot_options()
 {
-	local command=""
+	command=""
 	case "$1" in *\ *) die "certbot command argument contains space (remove quotes)";; esac
 	case "$1" in run|certonly) command="$1"; shift;; esac
-	local options="$*"
+	options="$*"
 	set_rc certbot_command "$command"
 	set_rc certbot_options "$options"
 }
@@ -589,7 +589,7 @@ certbot_options()
 
 adopt()
 {
-	local certname="$*"
+	certname="$*"
 	fname="$le/renewal/$certname.conf"
 	[ -f "$fname" ] || die "adopt $certname: Failed to find renewal config file $fname"
 	[ -e "$le/current/$certname" -o -e "$le/next/$certname" ] && die "adopt $certname: Already adopted"
@@ -631,8 +631,8 @@ default_certbot_command()
 
 new()
 {
-	local certname="$1"
-	local domains="$*"
+	certname="$1"
+	domains="$*"
 	certname="`echo $certname | sed 's/ .*$//'`"
 	domains="`echo $domains | sed 's/ /,/g'`"
 	[ -d "$le/live/$certname" ] && die "new $certname: Already exists"
@@ -646,8 +646,8 @@ new()
 
 dup()
 {
-	local certname="$1"
-	local domains="$*"
+	certname="$1"
+	domains="$*"
 	certname="`echo $certname | sed 's/ .*$//'`"
 	domains="`echo $domains | sed 's/ /,/g'`"
 	[ ! -d "$le/live/$certname" ] && die "dup $certname: Failed to find live original $certname"
@@ -663,7 +663,7 @@ dup()
 
 add_tlsa()
 {
-	local certname="$1"; shift
+	certname="$1"; shift
 	shcertname="`shcertname $certname`"
 	eval tlsa="\$tlsa_$shcertname"
 	set_rc tlsa_"$shcertname" "$tlsa $@"
@@ -673,7 +673,7 @@ add_tlsa()
 
 del_tlsa()
 {
-	local certname="$1"; shift
+	certname="$1"; shift
 	shcertname="`shcertname $certname`"
 	eval tlsa="\$tlsa_$shcertname"
 	for t in "$@"
@@ -687,7 +687,7 @@ del_tlsa()
 
 show_tlsa()
 {
-	local certname="$1"; shift
+	certname="$1"; shift
 	shcertname="`shcertname $certname`"
 	eval tlsa="\$tlsa_$shcertname"
 	echo "$tlsa"
@@ -697,10 +697,10 @@ show_tlsa()
 
 tlsa_role()
 {
-	local role="$1"
-	local certname="$2"
-	local label="$3"
-	local prefix="$4"
+	role="$1"
+	certname="$2"
+	label="$3"
+	prefix="$4"
 	shcertname="`shcertname $certname`"
 	eval tlsa="\$tlsa_$shcertname"
 	[ -z "$tlsa" ] && die "No TLSA records have been configured yet for $certname"
@@ -716,8 +716,8 @@ tlsa_role()
 
 tlsa_current()
 {
-	local certname="$1"
-	local label="${2:-current}"
+	certname="$1"
+	label="${2:-current}"
 	tlsa_role current "$certname" "$label"
 }
 
@@ -725,9 +725,9 @@ tlsa_current()
 
 tlsa_next()
 {
-	local certname="$1"
-	local label="${2:-next}"
-	local prefix="$3"
+	certname="$1"
+	label="${2:-next}"
+	prefix="$3"
 	tlsa_role next "$certname" "$label" "$prefix"
 }
 
@@ -735,7 +735,7 @@ tlsa_next()
 
 tlsa_check()
 {
-	local certname="$1"
+	certname="$1"
 	shcertname="`shcertname $certname`"
 	eval tlsa="\$tlsa_$shcertname"
 	[ -z "$tlsa" ] && die "No TLSA records have been configured yet for $certname"
@@ -782,7 +782,7 @@ tlsa_check()
 
 add_reload()
 {
-	local certname="$1"; shift
+	certname="$1"; shift
 	shcertname="`shcertname $certname`"
 	eval reload="\$reload_$shcertname"
 	set_rc reload_"$shcertname" "$reload $@"
@@ -792,7 +792,7 @@ add_reload()
 
 del_reload()
 {
-	local certname="$1"; shift
+	certname="$1"; shift
 	shcertname="`shcertname $certname`"
 	eval reload="\$reload_$shcertname"
 	for t in "$@"
@@ -806,7 +806,7 @@ del_reload()
 
 show_reload()
 {
-	local certname="$1"; shift
+	certname="$1"; shift
 	shcertname="`shcertname $certname`"
 	eval reload="\$reload_$shcertname"
 	echo "$reload"
@@ -816,7 +816,7 @@ show_reload()
 
 reload()
 {
-	local certname="$1"
+	certname="$1"
 	shcertname="`shcertname $certname`"
 	eval reload="\$reload_$shcertname"
 	for service in $reload
@@ -835,7 +835,7 @@ reload()
 
 rollover()
 {
-	local certname="$1"
+	certname="$1"
 	[ ! -d "$le/current/$certname" ] && die "rollover $certname: Failed to find current $certname"
 	[ ! -d "$le/next/$certname" ] && die "rollover $certname: Failed to find next $certname"
 	# Identify the transition: original to duplicate, or duplicate to original
@@ -902,8 +902,8 @@ status()
 
 tlsa_hash()
 {
-	local role="$1"
-	local certname="$2"
+	role="$1"
+	certname="$2"
 	cert="$le/$role/$certname/cert.pem"
 	echo "`openssl x509 -noout -pubkey -in \"$cert\" | openssl rsa -pubin -outform DER 2>/dev/null | sha256sum | sed 's/\s.*$//'`"
 }
@@ -920,8 +920,8 @@ run()
 
 add_line()
 {
-	local fname="$1"; shift
-	local line="$*"
+	fname="$1"; shift
+	line="$*"
 	line="`echo $line | sed -e 's/\s+/ /g' -e 's/^ //' -e 's/ $//'`"
 	[ $verbose = 1 ] && echo "Add \"$line\" to $fname"
 	[ $test = 0 ] && echo "$line" >> "$fname"
@@ -931,8 +931,8 @@ add_line()
 
 del_line()
 {
-	local fname="$1"; shift
-	local line="$*"
+	fname="$1"; shift
+	line="$*"
 	[ $verbose = 1 ] && echo "Remove \"$line\" from $fname"
 	[ $test = 1 ] && return
 	grep -v "^$line" "$fname" > "$fname.tmp.$$"
@@ -959,8 +959,8 @@ del_rc()
 
 set_rc()
 {
-	local name="$1"; shift
-	local value="$*"
+	name="$1"; shift
+	value="$*"
 	value="`echo \"$value\" | sed -e 's/^ //'`"
 	del_rc "$name="
 	add_rc "$name=\"$value\""
@@ -970,7 +970,7 @@ set_rc()
 
 remove_item()
 {
-	local item="$1"
+	item="$1"
 	echo `sed 's/ /\n/g' | grep -v "$item"`
 }
 
@@ -978,7 +978,7 @@ remove_item()
 
 shcertname()
 {
-	local certname="$1"
+	certname="$1"
 	echo "$certname" | sed 's/\./_/g'
 }
 
@@ -1060,7 +1060,7 @@ check_sshfp_prerequisites()
 
 sshfp()
 {
-	local hostname="$1"
+	hostname="$1"
 	ssh-keygen -r "$hostname" | sed -e 's/ /.	/' -e 's/ /	/' -e 's/ /	/'
 }
 
@@ -1068,7 +1068,7 @@ sshfp()
 
 sshfp_check()
 {
-	local hostname="$1"
+	hostname="$1"
 	perl -e '
 		use strict;
 		use warnings;
@@ -1101,7 +1101,7 @@ check_openpgpkey_prerequisites()
 
 openpgpkey()
 {
-	local email="$1"
+	email="$1"
 	# Convert gpg's hex output to base64
 	gpg --export-options export-dane --export "$email" | perl -e '
 		use strict;
@@ -1141,7 +1141,7 @@ openpgpkey()
 
 openpgpkey_check()
 {
-	local email="$1"
+	email="$1"
 	gpg --export-options export-dane --export "$email" | perl -e '
 		use strict;
 		use warnings;
@@ -1214,9 +1214,9 @@ check_smimea_prerequisites()
 
 smimea()
 {
-	local cert="$1"
+	cert="$1"
 	[ ! -f "$cert" ] && die "$cert is not a file"
-	local email="`openssl x509 -inform pem -in \"$cert\" -noout -text | perl -e '
+	email="`openssl x509 -inform pem -in \"$cert\" -noout -text | perl -e '
 		use strict;
 		use warnings;
 		while (<>)
@@ -1249,9 +1249,9 @@ smimea()
 
 smimea_check()
 {
-	local cert="$1"
+	cert="$1"
 	[ ! -f "$cert" ] && die "$cert is not a file"
-	local email="`openssl x509 -inform pem -in \"$cert\" -noout -text | perl -e '
+	email="`openssl x509 -inform pem -in \"$cert\" -noout -text | perl -e '
 		use strict;
 		use warnings;
 		while (<>)

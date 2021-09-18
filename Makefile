@@ -54,7 +54,7 @@ dist: clean $(DANECTL_MANFILE)
 install-bin:
 	mkdir -p $(APP_INSDIR)
 	install -m 755 $(DANECTL_NAME) $(APP_INSDIR)
-	[ -x /usr/xpg4/bin/sh ] && sed 's,^#!/bin/sh$$,#!/usr/xpg4/bin/sh,' < $(DANECTL_NAME) > $(APP_INSDIR)/$(DANECTL_NAME) || true
+	@[ ! -x /usr/xpg4/bin/sh ] || sed 's,^#!/bin/sh$$,#!/usr/xpg4/bin/sh,' < $(DANECTL_NAME) > $(APP_INSDIR)/$(DANECTL_NAME)
 
 install-man: $(DANECTL_MANFILE)
 	mkdir -p $(APP_MANDIR)

@@ -1,6 +1,6 @@
 #!/bin/sh
-# danectl - https://raf.org/danectl
-# DNSSEC DANE implementation manager
+# danectl - DNSSEC DANE implementation manager
+# https://raf.org/danectl
 #
 # Copyright (C) 2021 raf <raf@raf.org>
 #

@@ -1,5 +1,6 @@
 #
-# danectl - http://raf.org/danectl/
+# danectl - DNSSEC DANE implementation manager
+# https://raf.org/danectl
 #
 # Copyright (C) 2021 raf <raf@raf.org>
 #

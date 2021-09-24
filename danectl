@@ -202,7 +202,7 @@ automatic certbot certificate renewals.
 You then need to configure your TLS services to use the "current"
 certificate in /etc/letsencrypt/current/<cert-name>, and then reload them.
 This is like following instructions for using a certbot certificate, but
-replacing "live" with "current".
+replacing "/etc/letsencrypt/live" with "/etc/letsencrypt/current".
 
 Periodically, you can perform key rollovers on a schedule that suits you
 (e.g., annually). An emergency key rollover is exactly the same.

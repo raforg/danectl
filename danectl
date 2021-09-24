@@ -184,8 +184,8 @@ DANE, then instead of creating both certificate lineages, you can adopt the
 existing one for DANE use, and then just create the duplicate.
 
 After that, certbot automatically renews both certificates every few months,
-but the underlying keypairs won't change, and the TLSA records (see below)
-can remain stable.
+but the underlying keys won't change, and the TLSA records (see below) can
+remain stable.
 
 You then configure danectl with the set of port/protocol/host combinations
 that you need TLSA records for. Danectl can then output the TLSA records, in
@@ -327,8 +327,8 @@ This will create a symlink in /etc/letsencrypt/next to the duplicate
 certificate lineage.
 
 Once a pair of certificate lineages is set up, certbot will automatically
-renew them both, but the underlying keypairs won't change. That means that
-the TLSA records (see below) can remain stable for longer than just a few
+renew them both, but the underlying keys won't change. That means that the
+TLSA records (see below) can remain stable for longer than just a few
 months.
 
 Most of the remaining commands below require the base cert-name as their
@@ -405,10 +405,10 @@ Occasionally (e.g., annually), perform a key rollover:
   danectl rollover example.org
 
 This will redesignate the next key as the current key (and vice versa),
-reload affected services, and create a new keypair/certificate as the new
-next key. It also outputs the old TLSA records for the old current key that
-you need to remove from the DNS (somehow). And it outputs the new TLSA
-records for the new next key that you need to publish in the DNS (somehow).
+reload affected services, and create a new key/certificate as the new next
+key. It also outputs the old TLSA records for the old current key that you
+need to remove from the DNS (somehow). And it outputs the new TLSA records
+for the new next key that you need to publish in the DNS (somehow).
 
 At any time, you can show the status of all certificate pairs:
 
@@ -471,8 +471,8 @@ the DNS:
 FILES
 
   /etc/letsencrypt/live    - Certbot certificate lineages
-  /etc/letsencrypt/current - Current keypairs/certificates
-  /etc/letsencrypt/next    - Next keypairs/certificates
+  /etc/letsencrypt/current - Current keys/certificates
+  /etc/letsencrypt/next    - Next keys/certificates
   ~/.danectlrc             - Configuration file
 
 The ~/.danectlrc configuration file is technically a shell script.
@@ -865,7 +865,7 @@ rollover()
 	# Show the old TLSA records that need to be removed from the DNS
 	echo ";; Remove the following old records from the DNS"
 	tlsa_next "$certname" previous ";"
-	# Create the new next keypair/certificate
+	# Create the new next key/certificate
 	del_line "$le/renewal/$certname$next.conf" reuse_key
 	run certbot renew$quiet --force-renewal --cert-name "$certname$next"
 	rc=$?

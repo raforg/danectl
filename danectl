@@ -906,7 +906,7 @@ tlsa_hash()
 	role="$1"
 	certname="$2"
 	cert="$le/$role/$certname/cert.pem"
-	openssl x509 -in \"$cert\" -noout -pubkey | openssl rsa -pubin -outform DER 2>/dev/null | sha256sum | sed 's/\s.*$//'
+	openssl x509 -in "$cert" -noout -pubkey | openssl rsa -pubin -outform DER 2>/dev/null | sha256sum | sed 's/\s.*$//'
 }
 
 # Run a command unless testing, print it first if verbose

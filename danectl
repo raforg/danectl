@@ -840,7 +840,7 @@ rollover()
 	[ ! -d "$le/current/$certname" ] && die "rollover $certname: Failed to find current $certname"
 	[ ! -d "$le/next/$certname" ] && die "rollover $certname: Failed to find next $certname"
 	# Identify the transition: original to duplicate, or duplicate to original
-	if echo "`readlink \"$le/current/$certname\"`" | grep -q ".-duplicate"
+	if readlink "$le/current/$certname" | grep -q ".-duplicate"
 	then
 		curr="-duplicate"
 		next=""
@@ -906,7 +906,7 @@ tlsa_hash()
 	role="$1"
 	certname="$2"
 	cert="$le/$role/$certname/cert.pem"
-	echo "`openssl x509 -noout -pubkey -in \"$cert\" | openssl rsa -pubin -outform DER 2>/dev/null | sha256sum | sed 's/\s.*$//'`"
+	openssl x509 -in \"$cert\" -noout -pubkey | openssl rsa -pubin -outform DER 2>/dev/null | sha256sum | sed 's/\s.*$//'
 }
 
 # Run a command unless testing, print it first if verbose
@@ -972,7 +972,7 @@ set_rc()
 remove_item()
 {
 	item="$1"
-	echo `sed 's/ /\n/g' | grep -v "$item"`
+	sed 's/ /\n/g' | grep -v "$item"
 }
 
 # Output a form of certname that is suitable for use in a shell variable identifier

@@ -860,8 +860,8 @@ rollover()
 	# Perform the key rollover
 	run rm "$le/next/$certname"
 	run rm "$le/current/$certname"
-    run ln -s "$le/live/$certname$next" "$le/current/$certname"
-    run ln -s "$le/live/$certname$curr" "$le/next/$certname"
+	run ln -s "$le/live/$certname$next" "$le/current/$certname"
+	run ln -s "$le/live/$certname$curr" "$le/next/$certname"
 	reload "$certname"
 	# Swap $curr and $next
 	if [ "x$curr" = "x" ]
@@ -1226,6 +1226,7 @@ smimea()
 {
 	cert="$1"
 	[ ! -f "$cert" ] && die "$cert is not a file"
+	openssl x509 -inform pem -in "$cert" -noout -purpose | grep -q 'S/MIME encryption : Yes' || die "$cert is not an S/MIME certificate"
 	email="`openssl x509 -inform pem -in \"$cert\" -noout -text | perl -e '
 		use strict;
 		use warnings;

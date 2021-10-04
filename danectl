@@ -49,14 +49,14 @@ options:
  -V, --version                           - Show the name and version
  -v, --verbose                           - Verbose mode (announce actions)
  -q, --quiet                             - Quiet mode (pass -q to certbot)
- -n, --test                              - Test mode (don't change things)
+ -n, --test                              - Test mode (don't perform actions)
 
 commands:
  help                                    - Show the manual page
  aliases                                 - Show the command aliases
 
- certbot <options...>                    - Supply certbot auth/install details
- adopt <certname...>                     - Adopt an existing cert as current
+ certbot [new|certonly] <options...>     - Record certbot auth/install details
+ adopt <certname...>                     - Adopt existing cert(s) as current
  new <domain...>                         - Create a new original/current cert
  dup <domain...>                         - Create a new duplicate/next cert
  add-tlsa <certname> <_#._tcp[.host]...> - Add port/pro/host for TLSA output
@@ -68,7 +68,7 @@ commands:
  add-reload <certname> <service...>      - Add services to reload on rollover
  del-reload <certname> <service...>      - Delete services to reload on rollover
  show-reload <certname>                  - Show services to reload on rollover
- reload <certname...>                    - Reload affected services
+ reload <certname...>                    - Reload services affected by rollover
  rollover <certname...>                  - Perform a key rollover
  status                                  - Show current/next status
 
@@ -129,14 +129,14 @@ SYNOPSIS
   -V, --version                          - Show the name and version
   -v, --verbose                          - Verbose mode (announce actions)
   -q, --quiet                            - Quiet mode (pass -q to certbot)
-  -n, --test                             - Test mode (don't change things)
+  -n, --test                             - Test mode (don't perform actions)
 
  commands:
   help                                   - Show the manual page
   aliases                                - Show the command aliases
 
-  certbot <options...>                   - Supply certbot auth/install details
-  adopt <certname...>                    - Adopt an existing cert as current
+  certbot [new|certonly] <options...>    - Record certbot auth/install details
+  adopt <certname...>                    - Adopt existing cert(s) as current
   new <domain...>                        - Create a new original/current cert
   dup <domain...>                        - Create a new duplicate/next cert
   add-tlsa <certname> <_#._tcp[.host]..> - Add port/pro/host for TLSA output
@@ -148,7 +148,7 @@ SYNOPSIS
   add-reload <certname> <service...>     - Add services to reload on rollover
   del-reload <certname> <service...>     - Delete services to reload on rollover
   show-reload <certname>                 - Show services to reload on rollover
-  reload <certname...>                   - Reload affected services
+  reload <certname...>                   - Reload services affected by rollover
   rollover <certname...>                 - Perform a key rollover
   status                                 - Show current/next status
 
@@ -175,9 +175,9 @@ DESCRIPTION
 Danectl lets you create a pair of certbot certificate lineages to be used
 with DANE-aware TLS clients. They are referred to as the "original" and the
 "duplicate", or as the "current" and the "next". The current and next will
-repeatedly swap places between the original and the duplicate as the key
-rolls over from one to the other (with a new "next" key being created after
-each rollover).
+repeatedly swap places between the original and the duplicate certificate
+lineages as the key rolls over from one to the other (with a new "next" key
+being created after each rollover).
 
 If you already have a certbot certificate lineage that you want to use with
 DANE, then instead of creating both certificate lineages, you can adopt the
@@ -208,11 +208,11 @@ Periodically, you can perform key rollovers on a schedule that suits you
 (e.g., annually). An emergency key rollover is exactly the same.
 
 At any time, you can show the status (which certificate lineages are
-current, which are next, which new TLSA records are not yet published, and
-which old TLSA records have not yet been removed).
+current, which are next, which new TLSA records are not yet published to the
+DNS, and which old TLSA records have not yet been removed from the DNS).
 
 In addition to TLSA records, you can also generate SSHFP, OPENPGPKEY, and
-SMIMEA records, and check that they are published.
+SMIMEA records, and check that they are published to the DNS.
 
 OPTIONS
 
@@ -275,14 +275,13 @@ always uses certbot's "certonly" command.
 Certbot's "run" command must only be used when the new certificate is to be
 installed. Otherwise, certbot's "certonly" command must be used instead. If
 danectl's default certbot command is wrong for your needs, you can override
-it by putting "run" or "certonly" before any other certbot command line
-options.
+it by putting "run" or "certonly" before any certbot command line options.
 
 This might be useful if you have apache or nginx, but don't want the
 certificate installed automatically, or if you use a third-party plugin that
 is capable of installing the certificate, but danectl doesn't know that.
-Danectl assumes that all third-party plugins do not install, but that isn't
-always true.
+Danectl naively assumes that all third-party plugins do not install, but
+that isn't always true.
 
   danectl certbot certonly --nginx
   danectl certbot run --third-party-plugin-details
@@ -295,14 +294,14 @@ use:
   danectl adopt example.org
 
 Note that you must use the cert-name, not the list of certified domains.
-To see all of your cert-names, run "certbot certificates", or look in
-/etc/letsencrypt/live.
+Multiple cert-names can be supplied. To see all of your cert-names, run
+"certbot certificates", or look in /etc/letsencrypt/live.
 
-This will create a symlink in /etc/letsencrypt/current to the adopted
+This will create a symlink in /etc/letsencrypt/current to each adopted
 certificate lineage.
 
-If you want to create a new certbot certificate lineage for DANE use
-instead:
+If you want to create a new certbot certificate lineage for DANE instead,
+use:
 
   danectl new example.org www.example.org mail.example.org
 
@@ -388,7 +387,7 @@ They can also be removed:
 
 The "add-reload" and "del-reload" commands modify your ~/.danectlrc file.
 
-You can also show which services will be reloaded:
+You can also show which services will be reloaded when a key rolls over:
 
   danectl show-reload example.org
 
@@ -477,7 +476,8 @@ FILES
 
 The ~/.danectlrc configuration file is technically a shell script.
 But danectl's additions and removals are purely a single name="value"
-line at a time. Bear that in mind if you modify it manually.
+line at a time. Bear that in mind if you modify it manually. It must
+be owned by the user, and it must not be group- or world-writable.
 
 CAVEAT
 
@@ -487,9 +487,8 @@ for both the original and the duplicate certificate lineages (e.g.,
 example.org and example.org-duplicate), and you will need to use certbot's
 --cert-name command line option. Since there will be two certificate
 lineages with the same set of domains, it would be ambiguous otherwise.
-Perhaps danectl should be able to do this, but it doesn't. There may be
-other things that you will need to use certbot directly for. Keep things in
-sync.
+There may be other things that you will need to use certbot directly for.
+Keep things in sync.
 
 BUGS
 
@@ -528,7 +527,7 @@ that yourself by outputting records in the well-known Bind9 zonefile format.
 When performing a key rollover, and when performing any of the checks, any
 superfluous records that are to be removed are output in the form of
 comments where the leading semicolon (";") is not followed by a space (" ").
-That makes them easy to identify with grep (i.e. grep "^;[^ ]" for
+That makes them easy to identify with grep (i.e., grep "^;[^ ]" for
 superfluous records to be removed, and grep -v "^;[^ ]" for missing records
 to be published). Perhaps a plugin system could be added to automate updates
 for different DNS server software and different DNS service providers, but
@@ -547,6 +546,8 @@ For SSHFP usage, danectl requires /bin/sh, sed, host, perl, and ssh-keygen.
 For OPENPGPKEY usage, danectl requires /bin/sh, perl, and gpg.
 
 For SMIMEA usage, danectl requires /bin/sh, perl, and openssl.
+
+On systems like Solaris, /usr/xpg4/bin/sh is used instead of /bin/sh.
 
 LICENSE
 
@@ -573,7 +574,7 @@ HELP
 die() { echo "$name: $@" >&2; exit 1; }
 warn() { echo "$name: $@" >&2; }
 
-# Supply certbot auth/install details
+# Record certbot auth/install details
 
 certbot_options()
 {
@@ -585,7 +586,7 @@ certbot_options()
 	set_rc certbot_options "$options"
 }
 
-# Adopt an existing cert as current
+# Adopt existing cert(s) as current
 
 adopt()
 {
@@ -812,7 +813,7 @@ show_reload()
 	echo "$reload"
 }
 
-# Reload affected services
+# Reload services affected by rollover
 
 reload()
 {

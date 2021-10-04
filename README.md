@@ -20,9 +20,9 @@ checks that they are correctly published, and performs key rollovers.
 Danectl lets you create a pair of certbot certificate lineages to be used
 with DANE-aware TLS clients. They are referred to as the "original" and the
 "duplicate", or as the "current" and the "next". The current and next will
-repeatedly swap places between the original and the duplicate as the key
-rolls over from one to the other (with a new "next" key being created after
-each rollover).
+repeatedly swap places between the original and the duplicate certificate
+lineages as the key rolls over from one to the other (with a new "next" key
+being created after each rollover).
 
     danectl new example.org www.example.org mail.example.org
     danectl dup example.org www.example.org mail.example.org
@@ -82,13 +82,13 @@ Periodically, you can perform key rollovers on a schedule that suits you
     danectl rollover example.org
 
 At any time, you can show the status (which certificate lineages are
-current, which are next, which new TLSA records are not yet published, and
-which old TLSA records have not yet been removed).
+current, which are next, which new TLSA records are not yet published to the
+DNS, and which old TLSA records have not yet been removed from the DNS).
 
     danectl status
 
 In addition to TLSA records, you can also generate SSHFP, OPENPGPKEY, and
-SMIMEA records, and check that they are published.
+SMIMEA records, and check that they are published to the DNS.
 
     danectl sshfp example.org
     danectl sshfp-check example.org

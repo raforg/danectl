@@ -79,9 +79,9 @@ commands:
  smimea <smimecert.pem>                  - Output SMIMEA RR for a certificate
  smimea-check <smimecert.pem>            - Check SMIMEA RR is published
 
-Danectl is a DNSSEC DANE implementation manager. It uses certbot to create
+Danectl is a DNSSEC DANE implementation manager. It uses certbot(1) to create
 and manage pairs of keys for use with a TLSA 3 1 1 current + next workflow.
-It generates TLSA records for your TLS services for you to publish to the
+It generates TLSA records for your TLS services for you to publish in the
 DNS, checks that they are correctly published, and performs key rollovers.
 
 Danectl can also generate and check SSHFP records for the local SSH server.
@@ -163,7 +163,7 @@ INTRODUCTION
 
 Danectl is a DNSSEC DANE implementation manager. It uses certbot(1) to create
 and manage pairs of keys for use with a TLSA 3 1 1 current + next workflow.
-It generates TLSA records for your TLS services for you to publish to the
+It generates TLSA records for your TLS services for you to publish in the
 DNS, checks that they are correctly published, and performs key rollovers.
 
 Danectl can also generate and check SSHFP records for the local SSH server.
@@ -189,8 +189,8 @@ remain stable.
 
 You then configure danectl with the set of port/protocol/host combinations
 that you need TLSA records for. Danectl can then output the TLSA records, in
-zonefile format, and you need to publish them to the DNS (somehow). Danectl
-can then check that the TLSA records have been published to the DNS.
+zonefile format, and you need to publish them in the DNS (somehow). Danectl
+can then check that the TLSA records have been published in the DNS.
 
 You also need to configure danectl with the list of TLS services that need
 to be reloaded when the key rolls over. This is needed even when certbot is
@@ -208,11 +208,11 @@ Periodically, you can perform key rollovers on a schedule that suits you
 (e.g., annually). An emergency key rollover is exactly the same.
 
 At any time, you can show the status (which certificate lineages are
-current, which are next, which new TLSA records are not yet published to the
+current, which are next, which new TLSA records are not yet published in the
 DNS, and which old TLSA records have not yet been removed from the DNS).
 
 In addition to TLSA records, you can also generate SSHFP, OPENPGPKEY, and
-SMIMEA records, and check that they are published to the DNS.
+SMIMEA records, and check that they are published in the DNS.
 
 OPTIONS
 
@@ -527,7 +527,7 @@ a bug, as they seem to be the most/only useful ones.
 
 Danectl doesn't actually publish or remove any DNS records for you. This
 isn't really a bug. It's a limitation. There are too many ways to publish
-records to the DNS. But danectl does try to make it easy for you to handle
+records in the DNS. But danectl does try to make it easy for you to handle
 that yourself by outputting records in the well-known Bind9 zonefile format.
 When performing a key rollover, and when performing any of the checks, any
 superfluous records that are to be removed are output in the form of
@@ -881,7 +881,7 @@ rollover()
 	rc=$?
 	add_line "$le/renewal/$certname$next.conf" "reuse_key = True"
 	[ $test = 0 -a $rc != 0 ] && die "rollover $certname: certbot failed after the rollover! You must successfully run: certbot renew --force-renewal --cert-name \"$certname$next\" (but first remove \"reuse_key = True\" from $le/renewal/$certname$next.conf and then put it back afterwards)"
-	# Show the new TLSA records that need to be published to the DNS
+	# Show the new TLSA records that need to be published in the DNS
 	echo "; Publish the following new records in the DNS"
 	tlsa_next "$certname"
 }

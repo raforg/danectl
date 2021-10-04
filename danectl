@@ -161,7 +161,7 @@ SYNOPSIS
 
 INTRODUCTION
 
-Danectl is a DNSSEC DANE implementation manager. It uses certbot to create
+Danectl is a DNSSEC DANE implementation manager. It uses certbot(1) to create
 and manage pairs of keys for use with a TLSA 3 1 1 current + next workflow.
 It generates TLSA records for your TLS services for you to publish to the
 DNS, checks that they are correctly published, and performs key rollovers.
@@ -338,7 +338,8 @@ You then need to specify all of the port/protocol/host combinations that you
 will want TLSA records for:
 
   danectl add-tlsa example.org _443._tcp _443._tcp.www
-  danectl add-tlsa example.org _25._tcp.mail _465._tcp.mail _587._tcp.mail
+  danectl add-tlsa example.org _25._tcp.mail
+  danectl add-tlsa example.org _465._tcp.mail _587._tcp.mail
   danectl add-tlsa example.org _110._tcp.mail _143._tcp.mail
   danectl add-tlsa example.org _993._tcp.mail _995._tcp.mail
 
@@ -387,7 +388,7 @@ To specify the services that need to be reloaded when a key rolls over:
 
 They can also be removed:
 
-  danectl del-reload example.org postfix # Postfix can look after itself :-)
+  danectl del-reload example.org postfix # Postfix looks after itself
 
 The "add-reload" and "del-reload" commands modify your ~/.danectlrc file.
 
@@ -434,8 +435,8 @@ You can also output SSHFP records for the local SSH server:
 
 If you want to authorize your local SSH server's host keys to clients via
 DNSSEC, you will need to publish these SSHFP records in the DNS (somehow).
-You will also need to set VerifyHostKeyDNS to "yes" or "ask" in the ssh
-client configuration.
+You will also need to set VerifyHostKeyDNS to "yes" or "ask" in the ssh(1)
+client configuration (ssh_config(5)).
 
 To check that SSHFP records for the local SSH server are published in the
 DNS:
@@ -447,10 +448,10 @@ an email address in your GnuPG public keyring:
 
   danectl openpgpkey user@example.org
 
-The email address must be a valid argument for gpg's --export operation. If
-you want your correspondents to find the key, you will need to publish the
-OPENPGPKEY record in the DNS (somehow), and they will need to add "dane" to
-their auto-key-locate list.
+The email address must be a valid argument for gpg(1)'s --export option.
+If you want your correspondents to find the key, you will need to publish
+the OPENPGPKEY record in the DNS (somehow), and they will need to add "dane"
+to their auto-key-locate list.
 
 To check that the OPENPGPKEY record for the email address is published in
 the DNS:

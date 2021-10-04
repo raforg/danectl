@@ -334,8 +334,8 @@ Most of the remaining commands below require the base cert-name as their
 first argument. Not the list of domain names, just the first domain, or
 cert-name, without any "-duplicate" suffix.
 
-To specify the port/protocol/host combinations that you will want TLSA
-records for:
+You then need to specify all of the port/protocol/host combinations that you
+will want TLSA records for:
 
   danectl add-tlsa example.org _443._tcp _443._tcp.www
   danectl add-tlsa example.org _25._tcp.mail _465._tcp.mail _587._tcp.mail
@@ -343,9 +343,13 @@ records for:
   danectl add-tlsa example.org _993._tcp.mail _995._tcp.mail
 
 Do not include the base cert-name in the port/protocol/host combinations.
-That will be included automatically.
+That will be appended automatically. But if the certificate lineage
+certifies multiple base domains, and you need to specify a host that is not
+in the domain indicated by the base cert-name, then specify the complete
+hostname followed by a dot ("."). The trailing dot prevents the base
+cert-name from being automatically appended.
 
-They can also be removed:
+You can also remove port/protocol/host combinations:
 
   danectl del-tlsa example.org _110._tcp.mail _143._tcp.mail
 
@@ -709,7 +713,8 @@ tlsa_role()
 	echo "$prefix; $certname $label"
 	for t in $tlsa
 	do
-		echo "$prefix$t.$certname.\tIN\tTLSA\t3 1 1 $hash"
+		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
+		echo "$prefix$domain\tIN\tTLSA\t3 1 1 $hash"
 	done
 }
 
@@ -745,31 +750,34 @@ tlsa_check()
 	missing=0
 	for t in $tlsa
 	do
-		if host -t tlsa "$t.$certname" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_current"
+		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
+		if host -t tlsa "$domain" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_current"
 		then
 			:
 		else
 			[ "$missing" = 0 ] && echo "; Missing $certname current (must be published)"
 			missing=1
-			echo "$t.$certname.\tIN\tTLSA\t3 1 1 $hash_current"
+			echo "$domain\tIN\tTLSA\t3 1 1 $hash_current"
 		fi
 	done
 	missing=0
 	for t in $tlsa
 	do
-		if host -t tlsa "$t.$certname" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_next"
+		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
+		if host -t tlsa "$domain" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_next"
 		then
 			:
 		else
 			[ "$missing" = 0 ] && echo "; Missing $certname next (must be published)"
 			missing=1
-			echo "$t.$certname.\tIN\tTLSA\t3 1 1 $hash_next"
+			echo "$domain\tIN\tTLSA\t3 1 1 $hash_next"
 		fi
 	done
 	superfluous=0
 	for t in $tlsa
 	do
-		extra="`host -t tlsa \"$t.$certname\" | grep TLSA | sed -e 's/^/;/' -e 's/ has /.	/' -e 's/ record /	/' -e 'y/ABCDEF/abcdef/' -e 's/TLSa/TLSA/' -e 's/ \([a-f0-9][a-f0-9]*\)$/\1/' | grep -v \"$hash_current\" | grep -v \"$hash_next\"`"
+		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
+		extra="`host -t tlsa \"$domain\" | grep TLSA | sed -e 's/^/;/' -e 's/ has /.	/' -e 's/ record /	/' -e 'y/ABCDEF/abcdef/' -e 's/TLSa/TLSA/' -e 's/ \([a-f0-9][a-f0-9]*\)$/\1/' | grep -v \"$hash_current\" | grep -v \"$hash_next\"`"
 		if [ -n "$extra" ]
 		then
 			[ "$superfluous" = 0 ] && echo ";; Superfluous $certname (should be removed)"

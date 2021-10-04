@@ -960,11 +960,11 @@ del_rc()
 
 set_rc()
 {
-	name="$1"; shift
+	varname="$1"; shift
 	value="$*"
 	value="`echo \"$value\" | sed -e 's/^ //'`"
-	del_rc "$name="
-	add_rc "$name=\"$value\""
+	del_rc "$varname="
+	add_rc "$varname=\"$value\""
 }
 
 # Remove something from a space-separated list (stdin/stdout)

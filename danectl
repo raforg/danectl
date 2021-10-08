@@ -344,12 +344,18 @@ will want TLSA records for:
   danectl add-tlsa example.org _110._tcp.mail _143._tcp.mail
   danectl add-tlsa example.org _993._tcp.mail _995._tcp.mail
 
-Do not include the base cert-name in the port/protocol/host combinations.
-That will be appended automatically. But if the certificate lineage
-certifies multiple base domains, and you need to specify a host that is not
-in the domain indicated by the base cert-name, then specify the complete
-hostname followed by a dot ("."). The trailing dot prevents the base
-cert-name from being automatically appended.
+Do not include the base cert-name in the port/protocol/host combinations. It
+will be appended automatically when TLSA records are output.
+
+But if the certificate lineage certifies multiple base domains, and you need
+to specify a host that is not in the domain indicated by the base cert-name,
+then specify the complete hostname terminated by a dot ("."). The trailing
+dot prevents the base cert-name from being automatically appended.
+
+However, it's best to use a separate certificate lineage for each base
+domain. Otherwise, when danectl outputs TLSA records for a key, you will
+probably (depending on how you publish DNS records) need to separate the
+output for different zonefiles based on their base domains.
 
 You can also remove port/protocol/host combinations:
 

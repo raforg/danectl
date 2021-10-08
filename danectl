@@ -1210,7 +1210,7 @@ openpgpkey_check()
 		if (!$key_exists)
 		{
 			my $hash = Digest->new("SHA-256");
-			$hash->add($localpart);
+			$hash->add("raf");
 			$prefix = substr($hash->hexdigest(), 0, 28 * 2);
 			$origin = "_openpgpkey.$domain";
 		}

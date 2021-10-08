@@ -307,6 +307,7 @@ use:
 
 Note that you must provide the complete list of domain names to certify. The
 cert-name of the new certificate lineage will be the first domain in the list.
+It should be a base domain name.
 
 This will create a symlink in /etc/letsencrypt/current to the new
 certificate lineage.
@@ -325,9 +326,9 @@ but you will need to use it when using certbot directly.
 This will create a symlink in /etc/letsencrypt/next to the duplicate
 certificate lineage.
 
-Once a pair of certificate lineages is set up, certbot will automatically
-renew them both, but the underlying keys won't change. That means that the
-TLSA records (see below) can remain stable for longer than just a few
+Once a pair of certificate lineages is set up, certbot will start renewing
+them automatically, but the underlying keys won't change. That means that
+the TLSA records (see below) can remain stable for longer than just a few
 months.
 
 Most of the remaining commands below require the base cert-name as their

@@ -31,6 +31,7 @@ git=https://github.com/raforg/danectl
 test=0
 verbose=0
 quiet=
+oneline=0
 le=/etc/letsencrypt
 danectlrc="$HOME/.danectlrc"
 umask 022
@@ -50,6 +51,7 @@ options:
  -v, --verbose                           - Verbose mode (announce actions)
  -q, --quiet                             - Quiet mode (pass -q to certbot)
  -n, --test                              - Test mode (don't perform actions)
+ -1, --oneline                           - Output long RRs on a single line
 
 commands:
  help                                    - Show the manual page
@@ -130,6 +132,7 @@ SYNOPSIS
   -v, --verbose                          - Verbose mode (announce actions)
   -q, --quiet                            - Quiet mode (pass -q to certbot)
   -n, --test                             - Test mode (don't perform actions)
+  -1, --oneline                          - Output long RRs on a single line
 
  commands:
   help                                   - Show the manual page
@@ -240,6 +243,12 @@ idea, as it makes the output tidier.
 This enables test mode, preventing danectl from performing any changes. It
 implies verbose mode, causing danectl to print the actions that would have
 been performed.
+
+-1, --oneline
+
+This outputs long DNS records on a single very long line, rather than on
+multiple lines enclosed by parentheses. This only affects OPENPGPKEY and
+SMIMEA records. TLSA and SSHFP records are always output on a single line.
 
 COMMANDS
 
@@ -1130,7 +1139,10 @@ openpgpkey()
 			my $encoded = join "", map { pack("u", $_) =~ /^.(\S*)/ } $_[0] =~ /(.{1,45})/gs;
 			$encoded =~ tr{` -_}{AA-Za-z0-9+/};
 			$encoded =~ s/.{$padlen}$/"=" x $padlen/e if $padlen;
-			$encoded =~ s/(.{1,56})/\t$1\n/g;
+			$encoded =~ s/(.{1,56})/\t$1\n/g if '$oneline' == 0;
+			$encoded =~ s/^\t// if '$oneline' == 0;
+			$encoded =~ s/(.{1,56})/ $1/g if '$oneline' == 1;
+			$encoded =~ s/^ // if '$oneline' == 1;
 			return $encoded;
 		}
 		my $origin;
@@ -1147,10 +1159,10 @@ openpgpkey()
 		}
 		while (<>) {}
 		exit unless $origin && $prefix && $key_hex;
-		print($comment);
-		print("$prefix.$origin\tIN\tOPENPGPKEY\t(\n");
-		print(base64(pack("H*", $key_hex)));
-		print("\t)\n");
+		my $key = base64(pack("H*", $key_hex));
+		my $start = ('$oneline' == 0) ? "(\n\t" : "";
+		my $end = ('$oneline' == 0) ? "\t)" : "";
+		print("$comment$prefix.$origin\tIN\tOPENPGPKEY\t$start$key$end\n");
 	'
 }
 
@@ -1171,7 +1183,10 @@ openpgpkey_check()
 			my $encoded = join "", map { pack("u", $_) =~ /^.(\S*)/ } $_[0] =~ /(.{1,45})/gs;
 			$encoded =~ tr{` -_}{AA-Za-z0-9+/};
 			$encoded =~ s/.{$padlen}$/"=" x $padlen/e if $padlen;
-			$encoded =~ s/(.{1,56})/\t$1\n/g;
+			$encoded =~ s/(.{1,56})/\t$1\n/g if '$oneline' == 0;
+			$encoded =~ s/^\t// if '$oneline' == 0;
+			$encoded =~ s/(.{1,56})/ $1/g if '$oneline' == 1;
+			$encoded =~ s/^ // if '$oneline' == 1;
 			return $encoded;
 		}
 		my $origin;
@@ -1186,7 +1201,7 @@ openpgpkey_check()
 			$key_hex .= $1, next if /^\s+([0-9a-f]+)$/;
 			last if /^\s+\)$/;
 		}
-		while (<>) {}
+		while (<>) {} # Skip the same key appearing with multiple keyids
 		my $key_exists = $origin && $prefix && $key_hex;
 		my $key_base64 = base64(pack("H*", $key_hex)) if $key_exists;
 		my $email = q('"$email"');
@@ -1202,16 +1217,21 @@ openpgpkey_check()
 		# Is it published? Are any other keys published?
 		my $missing = $key_exists;
 		my $superfluous = "";
+		my $start = ('$oneline' == 0) ? "(\n\t" : "";
+		my $end = ('$oneline' == 0) ? "\t)" : "";
 		for (grep { /has OPENPGPKEY record/ } split /\n/, `host -t openpgpkey "$prefix.$origin"`)
 		{
 			my ($name, $rrdata) = $_ =~ /^(\S+) has OPENPGPKEY record (.+)$/;
 			$name = substr($name, 0, -(length($domain) + 1));
-			$rrdata =~ s/ /\n\t/g;
-			$rrdata = "\t$rrdata\n";
+			$rrdata =~ s/ //g;
+			$rrdata =~ s/(.{1,56})/ $1/g;
+			$rrdata =~ s/^ //g;
+			$rrdata =~ s/ /\n\t/g if '$oneline' == 0;
+			$rrdata = "$rrdata\n" if '$oneline' == 0;
 			$missing = 0, next if $key_base64 && $rrdata eq $key_base64;
-			$superfluous .= "$comment$prefix.$origin\tIN\tOPENPGPKEY\t(\n$rrdata\t)\n";
+			$superfluous .= "$comment$prefix.$origin\tIN\tOPENPGPKEY\t$start$rrdata$end\n";
 		}
-		print("; Missing $email openpgpkey (should be published)\n$comment$prefix.$origin\tIN\tOPENPGPKEY\t(\n$key_base64\t)\n") if $missing;
+		print("; Missing $email openpgpkey (should be published)\n$comment$prefix.$origin\tIN\tOPENPGPKEY\t$start$key_base64$end\n") if $missing;
 		$superfluous =~ s/^/;/mg if $superfluous;
 		print(";; Superfluous $email openpgpkey (should be removed)\n$superfluous") if $superfluous;
 	'
@@ -1250,7 +1270,10 @@ smimea()
 		binmode(STDIN);
 		$/ = undef;
 		my $cert = unpack("H*", <STDIN>);
-		$cert =~ s/(.{1,56})/\t$1\n/g;
+		$cert =~ s/(.{1,56})/\t$1\n/g if '$oneline' == 0;
+		$cert =~ s/^\t// if '$oneline' == 0;
+		$cert =~ s/(.{1,56})/ $1/g if '$oneline' == 1;
+		$cert =~ s/^ // if '$oneline' == 1;
 		my $email = q('"$email"');
 		my ($localpart, $domain) = $email =~ /^([^@]+)@([^@]+)$/;
 		die("'$name': Invalid email address: $email\n") unless defined $localpart && defined $domain;
@@ -1259,7 +1282,10 @@ smimea()
 		my $prefix = substr($hash->hexdigest(), 0, 28 * 2);
 		my $origin = "_smimecert.$domain.";
 		print("; $email\n");
-		print("$prefix.$origin\tIN\tSMIMEA\t(\n\t3 0 0\n$cert\t)\n");
+		my $start = ('$oneline' == 0) ? "(\n\t" : "";
+		my $middle = ('$oneline' == 0) ? "\n\t" : " ";
+		my $end = ('$oneline' == 0) ? "\t)" : "";
+		print("$prefix.$origin\tIN\tSMIMEA\t${start}3 0 0$middle$cert$end\n");
 	'
 }
 
@@ -1269,6 +1295,7 @@ smimea_check()
 {
 	cert="$1"
 	[ ! -f "$cert" ] && die "$cert is not a file"
+	openssl x509 -inform pem -in "$cert" -noout -purpose | grep -q 'S/MIME encryption : Yes' || die "$cert is not an S/MIME certificate"
 	email="`openssl x509 -inform pem -in \"$cert\" -noout -text | perl -e '
 		use strict;
 		use warnings;
@@ -1285,7 +1312,10 @@ smimea_check()
 		binmode(STDIN);
 		$/ = undef;
 		my $cert = unpack("H*", <STDIN>);
-		$cert =~ s/(.{1,56})/\t$1\n/g;
+		$cert =~ s/(.{1,56})/\t$1\n/g if '$oneline' == 0;
+		$cert =~ s/^\t// if '$oneline' == 0;
+		$cert =~ s/(.{1,56})/ $1/g if '$oneline' == 1;
+		$cert =~ s/^ // if '$oneline' == 1;
 		my $email = q('"$email"');
 		my ($localpart, $domain) = $email =~ /^([^@]+)@([^@]+)$/;
 		die("'$name': Invalid email address: $email\n") unless defined $localpart && defined $domain;
@@ -1296,18 +1326,25 @@ smimea_check()
 		my $origin = "_smimecert.$domain.";
 		my $missing = 1;
 		my $superfluous = "";
+		my $start = ('$oneline' == 0) ? "(\n\t" : "";
+		my $middle = ('$oneline' == 0) ? "\n\t" : " ";
+		my $end = ('$oneline' == 0) ? "\t)" : "";
+		my $lead = ('$oneline' == 0) ? "\t" : "";
 		for (grep { /has SMIMEA record/ } split /\n/, `host -t smimea "$prefix.$origin"`)
 		{
 			my ($name, $rrdata) = $_ =~ /^(\S+) has SMIMEA record (.+)$/;
 			$name = substr($name, 0, -(length($domain) + 1));
 			$rrdata = lc($rrdata);
-			$rrdata =~ s/ /\n\t/g;
-			$rrdata =~ s/^3\n\t0\n\t0/3 0 0/;
-			$rrdata = "\t$rrdata\n";
-			$missing = 0, next if $rrdata eq "\t3 0 0\n$cert";
-			$superfluous .= "$comment$prefix.$origin\tIN\tSMIME\t(\n$rrdata\t)\n";
+			$rrdata =~ s/^3\s*0\s*0\s*//;
+			$rrdata =~ s/ //g;
+			$rrdata =~ s/(.{1,56})/ $1/g;
+			$rrdata =~ s/^ //g;
+			$rrdata =~ s/ /\n\t/g if '$oneline' == 0;
+			$rrdata .= "\n" if '$oneline' == 0;
+			$missing = 0, next if $rrdata eq $cert;
+			$superfluous .= "$comment$prefix.$origin\tIN\tSMIMEA\t${start}3 0 0$middle$rrdata$end\n";
 		}
-		print("; Missing $email smimea (should be published)\n$comment$prefix.$origin\tIN\tSMIMEA\t(\n\t3 0 0\n$cert\t)\n") if $missing;
+		print("; Missing $email smimea (should be published)\n$comment$prefix.$origin\tIN\tSMIMEA\t${start}3 0 0$middle$cert$end\n") if $missing;
 		$superfluous =~ s/^/;/mg if $superfluous;
 		print(";; Superfluous $email smimea (should be removed)\n$superfluous") if $superfluous;
 	'
@@ -1342,6 +1379,10 @@ do
 		-n|--test)
 			verbose=1
 			test=1
+			shift
+			;;
+		-1|--oneline)
+			oneline=1
 			shift
 			;;
 		--)

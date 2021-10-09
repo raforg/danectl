@@ -1411,7 +1411,7 @@ case "$command" in
 		help | ${PAGER:-more}
 		;;
 
-	certbot|c)
+	certbot|cb|c)
 		[ $# = 0 ] && usage 1 "Missing certbot argument(s)"
 		check_prerequisites
 		certbot_options "$@"
@@ -1436,21 +1436,21 @@ case "$command" in
 		dup "$@"
 		;;
 
-	add-tlsa|tlsa-add|at|ta)
+	add-tlsa|tlsa-add|at|ta|add|tlsa)
 		[ $# -lt 2 ] && usage 1 "Missing add-tlsa argument(s)"
 		check_prerequisites
 		check_certnames "$1"
 		add_tlsa "$@"
 		;;
 
-	del-tlsa|delete-tlsa|tlsa-del|tlsa-delete|dt|td)
+	del-tlsa|delete-tlsa|tlsa-del|tlsa-delete|dt|td|del|delete)
 		[ $# -lt 2 ] && usage 1 "Missing del-tlsa argument(s)"
 		check_prerequisites
 		check_certnames "$1"
 		del_tlsa "$@"
 		;;
 
-	show-tlsa|tlsa-show|st|ts)
+	show-tlsa|tlsa-show|st|ts|show)
 		[ $# != 1 ] && usage 1 "Missing show-tlsa argument"
 		check_prerequisites
 		check_certnames "$1"
@@ -1477,7 +1477,7 @@ case "$command" in
 		for certname in ${*:-`all_certnames`}; do tlsa_check "$certname"; done
 		;;
 
-	add-reload|reload-add|ar|ra)
+	add-reload|reload-add|ar|ra|reload)
 		[ $# -lt 2 ] && usage 1 "Missing add-reload argument(s)"
 		check_prerequisites
 		check_certnames "$1"
@@ -1555,17 +1555,17 @@ case "$command" in
 
 	aliases|a):
 		echo "help: h"
-		echo "certbot: c"
+		echo "certbot: cb c"
 		echo "adopt: ad"
 		echo "new: original n o"
 		echo "dup: duplicate d"
-		echo "add-tlsa: tlsa-add at ta"
-		echo "del-tlsa: delete-tlsa tlsa-del tlsa-delete dt td"
-		echo "show-tlsa: tlsa-show st ts"
+		echo "add-tlsa: tlsa-add at ta add tlsa"
+		echo "del-tlsa: delete-tlsa tlsa-del tlsa-delete dt td del delete"
+		echo "show-tlsa: tlsa-show st ts show"
 		echo "tlsa-current: current-tlsa current tc ct curr"
 		echo "tlsa-next: next-tlsa next tn nt"
 		echo "tlsa-check: check-tlsa check tch cht ch chk"
-		echo "add-reload: reload-add ar ra"
+		echo "add-reload: reload-add ar ra reload"
 		echo "del-reload: delete-reload reload-del reload-delete dr rd"
 		echo "show-reload: reload-show sr rs"
 		echo "reload: r"

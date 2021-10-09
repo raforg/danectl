@@ -1553,8 +1553,9 @@ case "$command" in
 		smimea_check "$@"
 		;;
 
-	aliases|a):
+	aliases|alias|a):
 		echo "help: h"
+		echo "aliases: alias a"
 		echo "certbot: cb c"
 		echo "adopt: ad"
 		echo "new: original n o"
@@ -1577,7 +1578,6 @@ case "$command" in
 		echo "openpgpkey-check: check-openpgpkey pgpkey-check check-pgpkey gpgkey-check check-gpgkey pgp-check check-pgp gpg-check check-gpg pc cp gc cg"
 		echo "smimea: smime sm"
 		echo "smimea-check: check-smimea smime-check check-smime smc csm"
-		echo "aliases: a"
 		;;
 
 	'')

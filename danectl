@@ -1477,7 +1477,7 @@ case "$command" in
 		for certname in ${*:-`all_certnames`}; do tlsa_check "$certname"; done
 		;;
 
-	add-reload|reload-add|ar|ra|reload)
+	add-reload|reload-add|ar|ra)
 		[ $# -lt 2 ] && usage 1 "Missing add-reload argument(s)"
 		check_prerequisites
 		check_certnames "$1"
@@ -1565,7 +1565,7 @@ case "$command" in
 		echo "tlsa-current: current-tlsa current tc ct curr"
 		echo "tlsa-next: next-tlsa next tn nt"
 		echo "tlsa-check: check-tlsa check tch cht ch chk"
-		echo "add-reload: reload-add ar ra reload"
+		echo "add-reload: reload-add ar ra"
 		echo "del-reload: delete-reload reload-del reload-delete dr rd"
 		echo "show-reload: reload-show sr rs"
 		echo "reload: r"

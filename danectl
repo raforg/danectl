@@ -249,7 +249,7 @@ been performed.
 
 -1, --oneline
 
-This causes long DNS records to each be output on a single very long line,
+This causes each long DNS record to be output on a single very long line,
 rather than on multiple lines enclosed by parentheses. This only applies to
 OPENPGPKEY and SMIMEA records. Each TLSA and SSHFP record is always output
 on a single line.

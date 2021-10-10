@@ -258,7 +258,7 @@ on a single line.
 
 This implies the --oneline option, and causes space characters (" ") to be
 included in the output of long, single line DNS records. This only applies
-to OPENPGPKEY and SMIMEA records.
+to OPENPGPKEY and SMIMEA records. There's probably no real need for this.
 
 COMMANDS
 

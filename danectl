@@ -32,6 +32,7 @@ test=0
 verbose=0
 quiet=
 oneline=0
+spaces=0
 le=/etc/letsencrypt
 danectlrc="$HOME/.danectlrc"
 umask 022
@@ -52,6 +53,7 @@ options:
  -q, --quiet                             - Quiet mode (pass -q to certbot)
  -n, --test                              - Test mode (don't perform actions)
  -1, --oneline                           - Output long RRs on a single line
+ -s, --spaces                            - Include spaces in --oneline output
 
 commands:
  help                                    - Show the manual page
@@ -133,6 +135,7 @@ SYNOPSIS
   -q, --quiet                            - Quiet mode (pass -q to certbot)
   -n, --test                             - Test mode (don't perform actions)
   -1, --oneline                          - Output long RRs on a single line
+  -s, --spaces                           - Include spaces in --oneline output
 
  commands:
   help                                   - Show the manual page
@@ -250,6 +253,12 @@ This causes long DNS records to each be output on a single very long line,
 rather than on multiple lines enclosed by parentheses. This only applies to
 OPENPGPKEY and SMIMEA records. Each TLSA and SSHFP record is always output
 on a single line.
+
+-s, --spaces
+
+This implies the --oneline option, and causes space characters (" ") to be
+included in the output of long, single line DNS records. This only applies
+to OPENPGPKEY and SMIMEA records.
 
 COMMANDS
 
@@ -1142,8 +1151,8 @@ openpgpkey()
 			$encoded =~ s/.{$padlen}$/"=" x $padlen/e if $padlen;
 			$encoded =~ s/(.{1,56})/\t$1\n/g if '$oneline' == 0;
 			$encoded =~ s/^\t// if '$oneline' == 0;
-			$encoded =~ s/(.{1,56})/ $1/g if '$oneline' == 1;
-			$encoded =~ s/^ // if '$oneline' == 1;
+			$encoded =~ s/(.{1,56})/ $1/g if '$oneline' == 1 && '$spaces' == 1;
+			$encoded =~ s/^ // if '$oneline' == 1 && '$spaces' == 1;
 			return $encoded;
 		}
 		my $origin;
@@ -1186,8 +1195,8 @@ openpgpkey_check()
 			$encoded =~ s/.{$padlen}$/"=" x $padlen/e if $padlen;
 			$encoded =~ s/(.{1,56})/\t$1\n/g if '$oneline' == 0;
 			$encoded =~ s/^\t// if '$oneline' == 0;
-			$encoded =~ s/(.{1,56})/ $1/g if '$oneline' == 1;
-			$encoded =~ s/^ // if '$oneline' == 1;
+			$encoded =~ s/(.{1,56})/ $1/g if '$oneline' == 1 && '$spaces' == 1;
+			$encoded =~ s/^ // if '$oneline' == 1 && '$spaces' == 1;
 			return $encoded;
 		}
 		my $origin;
@@ -1229,6 +1238,7 @@ openpgpkey_check()
 			$rrdata =~ s/^ //g;
 			$rrdata =~ s/ /\n\t/g if '$oneline' == 0;
 			$rrdata = "$rrdata\n" if '$oneline' == 0;
+			$rrdata =~ s/ //g if '$oneline' == 1 && '$spaces' == 0;
 			$missing = 0, next if $key_base64 && $rrdata eq $key_base64;
 			$superfluous .= "$comment$prefix.$origin\tIN\tOPENPGPKEY\t$start$rrdata$end\n";
 		}
@@ -1273,8 +1283,8 @@ smimea()
 		my $cert = unpack("H*", <STDIN>);
 		$cert =~ s/(.{1,56})/\t$1\n/g if '$oneline' == 0;
 		$cert =~ s/^\t// if '$oneline' == 0;
-		$cert =~ s/(.{1,56})/ $1/g if '$oneline' == 1;
-		$cert =~ s/^ // if '$oneline' == 1;
+		$cert =~ s/(.{1,56})/ $1/g if '$oneline' == 1 && '$spaces' == 1;
+		$cert =~ s/^ // if '$oneline' == 1 && '$spaces' == 1;
 		my $email = q('"$email"');
 		my ($localpart, $domain) = $email =~ /^([^@]+)@([^@]+)$/;
 		die("'$name': Invalid email address: $email\n") unless defined $localpart && defined $domain;
@@ -1315,8 +1325,8 @@ smimea_check()
 		my $cert = unpack("H*", <STDIN>);
 		$cert =~ s/(.{1,56})/\t$1\n/g if '$oneline' == 0;
 		$cert =~ s/^\t// if '$oneline' == 0;
-		$cert =~ s/(.{1,56})/ $1/g if '$oneline' == 1;
-		$cert =~ s/^ // if '$oneline' == 1;
+		$cert =~ s/(.{1,56})/ $1/g if '$oneline' == 1 && '$spaces' == 1;
+		$cert =~ s/^ // if '$oneline' == 1 && '$spaces' == 1;
 		my $email = q('"$email"');
 		my ($localpart, $domain) = $email =~ /^([^@]+)@([^@]+)$/;
 		die("'$name': Invalid email address: $email\n") unless defined $localpart && defined $domain;
@@ -1342,6 +1352,7 @@ smimea_check()
 			$rrdata =~ s/^ //g;
 			$rrdata =~ s/ /\n\t/g if '$oneline' == 0;
 			$rrdata .= "\n" if '$oneline' == 0;
+			$rrdata =~ s/ //g if '$oneline' == 1 && '$spaces' == 0;
 			$missing = 0, next if $rrdata eq $cert;
 			$superfluous .= "$comment$prefix.$origin\tIN\tSMIMEA\t${start}3 0 0$middle$rrdata$end\n";
 		}
@@ -1384,6 +1395,11 @@ do
 			;;
 		-1|--oneline)
 			oneline=1
+			shift
+			;;
+		-s|--spaces)
+			oneline=1
+			spaces=1
 			shift
 			;;
 		--)

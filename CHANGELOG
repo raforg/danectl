@@ -1,6 +1,33 @@
 CHANGELOG
 =========
 
+0.7 (20211011)
+
+    - Replace original June 1991 GPLv2 with February 1999 (post-LGPLv2.1) GPLv2
+    - Replace contributor covenant v2.0 with v2.1
+    - adopt: Don't refuse existing cert created with --reuse-key (spotted by github/ran-deh)
+    - new/dup: Handle incorrectly quoted domains (spotted by github/ran-deh)
+    - Add support for overriding certbot command (spotted by github/ran-deh)
+    - Smarter certbot plugin/command defaults
+    - Detect incorrectly quoted certbot options
+    - Replace "$@" with "$*" where it matters (for Ubuntu/NetBSD) (spotted by github/ran-deh)
+    - Use /usr/xpg4/bin/sh if present (/bin/sh on Solaris11 is ksh93)
+    - Remove non-standard 'local' keyword for variables in functions
+    - make uninstall: Don't complain if files not installed
+    - make install: Silence Solaris tweak and improve its error reporting
+    - Rearrange copyright notice header
+    - doc: Add "/etc/letsencrypt" to "replacing live with current" for clarity
+    - doc: Replace "keypair" with "key" to avoid confusion with pairs of lineages
+    - Minor documentation improvements
+    - Remove superfluous echoes
+    - Fix variable name clash
+    - Support multiple base domains in a certificate lineage
+    - smimea: Add a better check that the certificate can do S/MIME encryption
+    - Add -1, --oneline option to output OPENPGPKEY/SMIMEA records on a single line
+    - openpgpkey-check: Fix output (add terminating dot) when no key but record exists 
+    - Add command aliases: alias cb add tlsa del delete show
+    - Add -s, --spaces option to include spaces in --oneline output
+
 0.6 (20210906)
 
     - Make all reporting of extraneous records greppable zonefile comments
@@ -77,7 +104,7 @@ CHANGELOG
 
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
-    Date: 20210906
+    Date: 20211011
     Author: raf <raf@raf.org>
 
 

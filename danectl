@@ -59,7 +59,7 @@ commands:
  help                                    - Show the manual page
  aliases                                 - Show the command aliases
 
- certbot [new|certonly] <options...>     - Record certbot auth/install details
+ certbot [run|certonly] <options...>     - Record certbot auth/install details
  adopt <certname...>                     - Adopt existing cert(s) as current
  new <domain...>                         - Create a new original/current cert
  dup <domain...>                         - Create a new duplicate/next cert
@@ -141,7 +141,7 @@ SYNOPSIS
   help                                   - Show the manual page
   aliases                                - Show the command aliases
 
-  certbot [new|certonly] <options...>    - Record certbot auth/install details
+  certbot [run|certonly] <options...>    - Record certbot auth/install details
   adopt <certname...>                    - Adopt existing cert(s) as current
   new <domain...>                        - Create a new original/current cert
   dup <domain...>                        - Create a new duplicate/next cert

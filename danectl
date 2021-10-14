@@ -1434,7 +1434,8 @@ case "$command" in
 		;;
 
 	adopt|ad)
-		[ $# != 1 ] && usage 1 "Missing adopt argument"
+		[ $# -lt 1 ] && usage 1 "Missing adopt argument"
+		[ $# -gt 1 ] && usage 1 "Too many adopt arguments"
 		check_prerequisites
 		check_certnames "$1"
 		adopt "$@"
@@ -1467,7 +1468,8 @@ case "$command" in
 		;;
 
 	show-tlsa|tlsa-show|st|ts|show)
-		[ $# != 1 ] && usage 1 "Missing show-tlsa argument"
+		[ $# -lt 1 ] && usage 1 "Missing show-tlsa argument"
+		[ $# -gt 1 ] && usage 1 "Too many show-tlsa arguments"
 		check_prerequisites
 		check_certnames "$1"
 		show_tlsa "$@"
@@ -1508,7 +1510,8 @@ case "$command" in
 		;;
 
 	show-reload|reload-show|sr|rs)
-		[ $# != 1 ] && usage 1 "Missing show-reload argument"
+		[ $# -lt 1 ] && usage 1 "Missing show-reload argument"
+		[ $# -gt 1 ] && usage 1 "Too many show-reload arguments"
 		check_prerequisites
 		check_certnames "$1"
 		show_reload "$@"
@@ -1529,42 +1532,49 @@ case "$command" in
 		;;
 
 	status|s)
+		[ $# != 0 ] && usage 1 "Too many status arguments"
 		check_prerequisites
 		status "$@"
 		;;
 
 	sshfp|ssh)
-		[ $# != 1 ] && usage 1 "Missing sshfp argument"
+		[ $# -lt 1 ] && usage 1 "Missing sshfp argument"
+		[ $# -gt 1 ] && usage 1 "Too many sshfp arguments"
 		check_sshfp_prerequisites
 		sshfp "$@"
 		;;
 
 	sshfp-check|check-sshfp|ssh-check|check-ssh|sch|schk)
-		[ $# != 1 ] && usage 1 "Missing sshfp-check argument"
+		[ $# -lt 1 ] && usage 1 "Missing sshfp-check argument"
+		[ $# -gt 1 ] && usage 1 "Too many sshfp-check arguments"
 		check_sshfp_prerequisites
 		sshfp_check "$@"
 		;;
 
 	openpgpkey|pgpkey|gpgkey|pgp|gpg|p|g)
-		[ $# != 1 ] && usage 1 "Missing openpgpkey argument"
+		[ $# -lt 1 ] && usage 1 "Missing openpgpkey argument"
+		[ $# -gt 1 ] && usage 1 "Too many openpgpkey arguments"
 		check_openpgpkey_prerequisites
 		openpgpkey "$@"
 		;;
 
 	openpgpkey-check|check-openpgpkey|pgpkey-check|check-pgpkey|gpgkey-check|check-gpgkey|pgp-check|check-pgp|gpg-check|check-gpg|pc|cp|gc|cg)
-		[ $# != 1 ] && usage 1 "Missing openpgpkey-check argument"
+		[ $# -lt 1 ] && usage 1 "Missing openpgpkey-check argument"
+		[ $# -gt 1 ] && usage 1 "Too many openpgpkey-check argument"
 		check_openpgpkey_prerequisites
 		openpgpkey_check "$@"
 		;;
 
 	smimea|smime|sm)
-		[ $# != 1 ] && usage 1 "Missing smimea argument"
+		[ $# -lt 1 ] && usage 1 "Missing smimea argument"
+		[ $# -gt 1 ] && usage 1 "Too many smimea arguments"
 		check_smimea_prerequisites
 		smimea "$@"
 		;;
 
 	smimea-check|check-smimea|smime-check|check-smime|smc|csm)
-		[ $# != 1 ] && usage 1 "Missing smimea-check argument"
+		[ $# -lt 1 ] && usage 1 "Missing smimea-check argument"
+		[ $# -gt 1 ] && usage 1 "Too many smimea-check arguments"
 		check_smimea_prerequisites
 		smimea_check "$@"
 		;;

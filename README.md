@@ -103,8 +103,8 @@ SMIMEA records, and check that they are published in the DNS.
 
 To install danectl:
 
-    tar xzf danectl-0.7.tar.gz
-    cd danectl-0.7
+    tar xzf danectl-0.7.1.tar.gz
+    cd danectl-0.7.1
     make install
 
 This will install:
@@ -137,6 +137,6 @@ On systems like Solaris, /usr/xpg4/bin/sh is used instead of /bin/sh.
 
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
-    Date: 20211011
+    Date: 20211014
     Author: raf <raf@raf.org>
 

@@ -1,6 +1,16 @@
 CHANGELOG
 =========
 
+0.7.1 (20211014)
+
+    - doc: Fixed usage typo
+    - adopt: Accept only a single cert-name (not multiple)
+    - Improve error message when too many arguments supplied (Say 'Too many' rather than 'Missing')
+    - Add helpful statements of expectations to usage error messages
+    - Reorder --quiet and --verbose in usage and manual page
+    - Rename certbot_options() function to certbot()
+    - Minor documentation improvements
+
 0.7 (20211011)
 
     - Replace original June 1991 GPLv2 with February 1999 (post-LGPLv2.1) GPLv2
@@ -104,7 +114,7 @@ CHANGELOG
 
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
-    Date: 20211011
+    Date: 20211014
     Author: raf <raf@raf.org>
 
 

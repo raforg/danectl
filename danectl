@@ -214,8 +214,8 @@ Periodically, you can perform key rollovers on a schedule that suits you
 (e.g., annually). An emergency key rollover is exactly the same.
 
 At any time, you can show the status (which certificate lineages are
-current, which are next, which new TLSA records are not yet published in the
-DNS, and which old TLSA records have not yet been removed from the DNS).
+"current", which are "next", which new TLSA records are not yet published in
+the DNS, and which old TLSA records have not yet been removed from the DNS).
 
 In addition to TLSA records, you can also generate SSHFP, OPENPGPKEY, and
 SMIMEA records, and check that they are published in the DNS.
@@ -234,7 +234,7 @@ This outputs danectl's name and version, then exits.
 
 This enables quiet mode, causing danectl to pass -q to certbot. This only
 affects the "new", "dup", and "rollover" commands, and is probably a good
-idea, as it makes the output tidier.
+idea, as it makes the output tidier (especially for cronjobs).
 
 -v, --verbose
 
@@ -250,15 +250,16 @@ been performed.
 -1, --oneline
 
 This causes each long DNS record to be output on a single very long line,
-rather than on multiple lines enclosed by parentheses. This only applies to
-OPENPGPKEY and SMIMEA records. Each TLSA and SSHFP record is always output
-on a single line.
+rather than on multiple lines enclosed by parentheses ("(" and ")"). This
+only applies to OPENPGPKEY and SMIMEA records. Each TLSA and SSHFP record is
+always output on a single line.
 
 -s, --spaces
 
 This implies the --oneline option, and causes space characters (" ") to be
-included in the output of long, single line DNS records. This only applies
-to OPENPGPKEY and SMIMEA records. There's probably no real need for this.
+included in the output of long, single line DNS records (one every 56
+characters). This only applies to OPENPGPKEY and SMIMEA records. There's
+probably no real need for this.
 
 COMMANDS
 
@@ -271,9 +272,9 @@ You can also show the aliases for all of the commands:
   danectl aliases
 
 Before you can use danectl to do anything interesting for TLS, you might
-need to supply any command line options that certbot will need when it
-creates new certificate lineages. This is for authentication and
-installation. Don't use quotes and don't put spaces inside arguments
+need to supply any command line command and/or options that certbot will
+need when it creates new certificate lineages. This is for authentication
+and installation. Don't use quotes and don't put spaces inside arguments
 (e.g., webroot paths must not contain spaces).
 
   danectl certbot --apache
@@ -316,7 +317,7 @@ Note that you must use an existing certificate's cert-name, not the list of
 certified domains. To see all of your cert-names, run "certbot
 certificates", or look in /etc/letsencrypt/live.
 
-This will create a symlink in /etc/letsencrypt/current to each adopted
+This will create a symlink in /etc/letsencrypt/current to the adopted
 certificate lineage.
 
 If you want to create a new certbot certificate lineage for DANE instead,
@@ -434,7 +435,7 @@ Occasionally (e.g., annually), perform a key rollover:
 
   danectl rollover example.org
 
-This will redesignate the next key as the current key (and vice versa),
+This will redesignate the "next" key as the "current" key (and vice versa),
 reload affected services, and create a new key/certificate as the new next
 key. It also outputs the old TLSA records for the old current key that you
 need to remove from the DNS (somehow). And it outputs the new TLSA records
@@ -445,10 +446,10 @@ At any time, you can show the status of all certificate pairs:
   danectl status
 
 This will show, for each base cert-name, which certificate lineage is
-current (original or duplicate), and which is next. It will also show any
-new TLSA records that should be, but are not, published in the DNS. It will
-also show any old TLSA records that are published in the DNS, but should no
-longer be.
+"current" (original or duplicate), and which is "next". It will also show
+any new TLSA records that should be, but are not, published in the DNS. It
+will also show any old TLSA records that are published in the DNS, but
+should no longer be.
 
 If any of the symlinks in /etc/letsencrypt/{current,next} target certificate
 lineages that no longer exist in /etc/letsencrypt/live, this is also

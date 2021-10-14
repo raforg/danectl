@@ -607,7 +607,7 @@ warn() { echo "$name: $@" >&2; }
 
 # Record certbot auth/install details
 
-certbot_options()
+certbot()
 {
 	command=""
 	case "$1" in *\ *) die "certbot command argument contains space (remove quotes)";; esac
@@ -1430,7 +1430,7 @@ case "$command" in
 	certbot|cb|c)
 		[ $# = 0 ] && usage 1 "Missing certbot argument(s) (expected (run or certonly) and/or certbot options)"
 		check_prerequisites
-		certbot_options "$@"
+		certbot "$@"
 		;;
 
 	adopt|ad)

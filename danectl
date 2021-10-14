@@ -49,8 +49,8 @@ usage: $name [options] command [arg...]
 options:
  -h, --help                              - Show the usage message
  -V, --version                           - Show the name and version
- -v, --verbose                           - Verbose mode (announce actions)
  -q, --quiet                             - Quiet mode (pass -q to certbot)
+ -v, --verbose                           - Verbose mode (announce actions)
  -n, --test                              - Test mode (don't perform actions)
  -1, --oneline                           - Output long RRs on a single line
  -s, --spaces                            - Include spaces in --oneline output
@@ -131,8 +131,8 @@ SYNOPSIS
  options:
   -h, --help                             - Show the usage message
   -V, --version                          - Show the name and version
-  -v, --verbose                          - Verbose mode (announce actions)
   -q, --quiet                            - Quiet mode (pass -q to certbot)
+  -v, --verbose                          - Verbose mode (announce actions)
   -n, --test                             - Test mode (don't perform actions)
   -1, --oneline                          - Output long RRs on a single line
   -s, --spaces                           - Include spaces in --oneline output
@@ -230,16 +230,16 @@ This outputs danectl's usage message, then exits.
 
 This outputs danectl's name and version, then exits.
 
--v, --verbose
-
-This enables verbose mode, causing danectl to print actions before
-performing them.
-
 -q, --quiet
 
 This enables quiet mode, causing danectl to pass -q to certbot. This only
 affects the "new", "dup", and "rollover" commands, and is probably a good
 idea, as it makes the output tidier.
+
+-v, --verbose
+
+This enables verbose mode, causing danectl to print actions before
+performing them.
 
 -n, --test
 

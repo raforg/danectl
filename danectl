@@ -1428,62 +1428,62 @@ case "$command" in
 		;;
 
 	certbot|cb|c)
-		[ $# = 0 ] && usage 1 "Missing certbot argument(s)"
+		[ $# = 0 ] && usage 1 "Missing certbot argument(s) (expected (run or certonly) and/or certbot options)"
 		check_prerequisites
 		certbot_options "$@"
 		;;
 
 	adopt|ad)
-		[ $# -lt 1 ] && usage 1 "Missing adopt argument"
-		[ $# -gt 1 ] && usage 1 "Too many adopt arguments"
+		[ $# -lt 1 ] && usage 1 "Missing adopt argument (expected a cert-name)"
+		[ $# -gt 1 ] && usage 1 "Too many adopt arguments (expected a cert-name)"
 		check_prerequisites
 		check_certnames "$1"
 		adopt "$@"
 		;;
 
 	new|original|n|o)
-		[ $# = 0 ] && usage 1 "Missing new argument(s)"
+		[ $# = 0 ] && usage 1 "Missing new argument(s) (expected one or more domains to certify)"
 		check_prerequisites
 		new "$@"
 		;;
 
 	dup|duplicate|d)
-		[ $# = 0 ] && usage 1 "Missing dup argument(s)"
+		[ $# = 0 ] && usage 1 "Missing dup argument(s) (expected one or more domains to certify)"
 		check_prerequisites
 		dup "$@"
 		;;
 
 	add-tlsa|tlsa-add|at|ta|add|tlsa)
-		[ $# -lt 2 ] && usage 1 "Missing add-tlsa argument(s)"
+		[ $# -lt 2 ] && usage 1 "Missing add-tlsa argument(s) (expected a cert-name and one or more port/protocol/host combinations)"
 		check_prerequisites
 		check_certnames "$1"
 		add_tlsa "$@"
 		;;
 
 	del-tlsa|delete-tlsa|tlsa-del|tlsa-delete|dt|td|del|delete)
-		[ $# -lt 2 ] && usage 1 "Missing del-tlsa argument(s)"
+		[ $# -lt 2 ] && usage 1 "Missing del-tlsa argument(s) (expected a cert-name and one or more port/protocol/host combinations)"
 		check_prerequisites
 		check_certnames "$1"
 		del_tlsa "$@"
 		;;
 
 	show-tlsa|tlsa-show|st|ts|show)
-		[ $# -lt 1 ] && usage 1 "Missing show-tlsa argument"
-		[ $# -gt 1 ] && usage 1 "Too many show-tlsa arguments"
+		[ $# -lt 1 ] && usage 1 "Missing show-tlsa argument (expected a cert-name)"
+		[ $# -gt 1 ] && usage 1 "Too many show-tlsa arguments (expected a cert-name)"
 		check_prerequisites
 		check_certnames "$1"
 		show_tlsa "$@"
 		;;
 
 	tlsa-current|current-tlsa|current|tc|ct|curr)
-		[ $# = 0 ] && usage 1 "Missing tlsa-current argument(s)"
+		[ $# = 0 ] && usage 1 "Missing tlsa-current argument(s) (expected one or more cert-names)"
 		check_prerequisites
 		check_certnames "$@"
 		for certname in "$@"; do tlsa_current "$certname"; done
 		;;
 
 	tlsa-next|next-tlsa|next|tn|nt)
-		[ $# = 0 ] && usage 1 "Missing tlsa-next argument(s)"
+		[ $# = 0 ] && usage 1 "Missing tlsa-next argument(s) (expected one or more cert-names)"
 		check_prerequisites
 		check_certnames "$@"
 		for certname in "$@"; do tlsa_next "$certname"; done
@@ -1496,85 +1496,85 @@ case "$command" in
 		;;
 
 	add-reload|reload-add|ar|ra)
-		[ $# -lt 2 ] && usage 1 "Missing add-reload argument(s)"
+		[ $# -lt 2 ] && usage 1 "Missing add-reload argument(s) (expected a cert-name and one or more service names)"
 		check_prerequisites
 		check_certnames "$1"
 		add_reload "$@"
 		;;
 
 	del-reload|delete-reload|reload-del|reload-delete|dr|rd)
-		[ $# -lt 2 ] && usage 1 "Missing del-reload argument(s)"
+		[ $# -lt 2 ] && usage 1 "Missing del-reload argument(s) (expected a cert-name and one or more service names)"
 		check_prerequisites
 		check_certnames "$1"
 		del_reload "$@"
 		;;
 
 	show-reload|reload-show|sr|rs)
-		[ $# -lt 1 ] && usage 1 "Missing show-reload argument"
-		[ $# -gt 1 ] && usage 1 "Too many show-reload arguments"
+		[ $# -lt 1 ] && usage 1 "Missing show-reload argument (expected a cert-name)"
+		[ $# -gt 1 ] && usage 1 "Too many show-reload arguments (expected a cert-name)"
 		check_prerequisites
 		check_certnames "$1"
 		show_reload "$@"
 		;;
 
 	reload|r)
-		[ $# = 0 ] && usage 1 "Missing reload argument(s)"
+		[ $# = 0 ] && usage 1 "Missing reload argument(s) (expected one or more cert-names)"
 		check_prerequisites
 		check_certnames "$@"
 		for certname in "$@"; do reload "$certname"; done
 		;;
 
 	rollover|ro)
-		[ $# = 0 ] && usage 1 "Missing rollover argument(s)"
+		[ $# = 0 ] && usage 1 "Missing rollover argument(s) (expected one or more cert-names)"
 		check_prerequisites
 		check_both_certnames "$@"
 		for certname in "$@"; do rollover "$certname"; done
 		;;
 
 	status|s)
-		[ $# != 0 ] && usage 1 "Too many status arguments"
+		[ $# != 0 ] && usage 1 "Too many status arguments (expected no additional arguments)"
 		check_prerequisites
 		status "$@"
 		;;
 
 	sshfp|ssh)
-		[ $# -lt 1 ] && usage 1 "Missing sshfp argument"
-		[ $# -gt 1 ] && usage 1 "Too many sshfp arguments"
+		[ $# -lt 1 ] && usage 1 "Missing sshfp argument (expected a domain)"
+		[ $# -gt 1 ] && usage 1 "Too many sshfp arguments (expected a domain)"
 		check_sshfp_prerequisites
 		sshfp "$@"
 		;;
 
 	sshfp-check|check-sshfp|ssh-check|check-ssh|sch|schk)
-		[ $# -lt 1 ] && usage 1 "Missing sshfp-check argument"
-		[ $# -gt 1 ] && usage 1 "Too many sshfp-check arguments"
+		[ $# -lt 1 ] && usage 1 "Missing sshfp-check argument (expected a domain)"
+		[ $# -gt 1 ] && usage 1 "Too many sshfp-check arguments (expected a domain)"
 		check_sshfp_prerequisites
 		sshfp_check "$@"
 		;;
 
 	openpgpkey|pgpkey|gpgkey|pgp|gpg|p|g)
-		[ $# -lt 1 ] && usage 1 "Missing openpgpkey argument"
-		[ $# -gt 1 ] && usage 1 "Too many openpgpkey arguments"
+		[ $# -lt 1 ] && usage 1 "Missing openpgpkey argument (expected an email address / gnupg keyid)"
+		[ $# -gt 1 ] && usage 1 "Too many openpgpkey arguments (expected an email address / gnupg keyid)"
 		check_openpgpkey_prerequisites
 		openpgpkey "$@"
 		;;
 
 	openpgpkey-check|check-openpgpkey|pgpkey-check|check-pgpkey|gpgkey-check|check-gpgkey|pgp-check|check-pgp|gpg-check|check-gpg|pc|cp|gc|cg)
-		[ $# -lt 1 ] && usage 1 "Missing openpgpkey-check argument"
-		[ $# -gt 1 ] && usage 1 "Too many openpgpkey-check argument"
+		[ $# -lt 1 ] && usage 1 "Missing openpgpkey-check argument (expected an email address / gnupg keyid)"
+		[ $# -gt 1 ] && usage 1 "Too many openpgpkey-check argument (expected an email address / gnupg keyid)"
 		check_openpgpkey_prerequisites
 		openpgpkey_check "$@"
 		;;
 
 	smimea|smime|sm)
-		[ $# -lt 1 ] && usage 1 "Missing smimea argument"
-		[ $# -gt 1 ] && usage 1 "Too many smimea arguments"
+		[ $# -lt 1 ] && usage 1 "Missing smimea argument (expected an S/MIME certificate filename)"
+		[ $# -gt 1 ] && usage 1 "Too many smimea arguments (expected an S/MIME certificate filename)"
 		check_smimea_prerequisites
 		smimea "$@"
 		;;
 
 	smimea-check|check-smimea|smime-check|check-smime|smc|csm)
-		[ $# -lt 1 ] && usage 1 "Missing smimea-check argument"
-		[ $# -gt 1 ] && usage 1 "Too many smimea-check arguments"
+		[ $# -lt 1 ] && usage 1 "Missing smimea-check argument (expected an S/MIME certificate filename)"
+		[ $# -gt 1 ] && usage 1 "Too many smimea-check arguments (expected an S/MIME certificate filename)"
 		check_smimea_prerequisites
 		smimea_check "$@"
 		;;

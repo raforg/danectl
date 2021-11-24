@@ -1563,7 +1563,7 @@ case "$command" in
 	status|s)
 		[ $# != 0 ] && usage 1 "Too many status arguments (expected no additional arguments)"
 		check_prerequisites
-		status "$@"
+		status
 		reuse_key_check
 		;;
 

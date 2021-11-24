@@ -404,7 +404,9 @@ published in the DNS:
 
   danectl tlsa-check example.org
 
-If no cert-name is supplied, then all cert-names are checked.
+If no cert-name is supplied, then all cert-names are checked, and the
+--reuse-key status of each certificate lineage is checked, and restored if
+it is unset for any reason.
 
 All TLSA records for the current and next keys must be published in the DNS
 before you configure your services to use the current key.
@@ -455,6 +457,9 @@ If any of the symlinks in /etc/letsencrypt/{current,next} target certificate
 lineages that no longer exist in /etc/letsencrypt/live, this is also
 mentioned, and they are deleted. This indicates that the certificate lineage
 was previously deleted with certbot.
+
+If any of the certificate lineages no longer have their --reuse-key status
+set for any reason, this is also mentioned, and it is restored.
 
 You can also output SSHFP records for the local SSH server:
 
@@ -933,6 +938,28 @@ status()
 		[ -h "$symlink" ] || continue
 		tlsa_check "${symlink##*/}"
 	done
+}
+
+# Check/ensure that all certificate renewals will reuse the key
+
+reuse_key_check()
+{
+	for role in current next
+	do
+		for symlink in "$le/$role"/*
+		do
+			[ -h "$symlink" ] || continue
+			[ -d "$symlink" ] || continue
+			target="`readlink \"$symlink\"`"
+			certname="${target##*/}"
+			fname="$le/renewal/$certname.conf"
+			[ -f "$fname" ] || continue
+			grep -q "reuse_key = True" "$fname" && continue
+			del_line "$fname" reuse_key
+			add_line "$fname" "reuse_key = True"
+			echo "$certname: Not reusing key on renewal (fixed)"
+		done
+	done | sort
 }
 
 # Output the public key hash for the given role and cert-name
@@ -1494,6 +1521,7 @@ case "$command" in
 		check_prerequisites
 		[ $# != 0 ] && check_both_certnames "$@"
 		for certname in ${*:-`all_certnames`}; do tlsa_check "$certname"; done
+		[ $# = 0 ] && reuse_key_check
 		;;
 
 	add-reload|reload-add|ar|ra)
@@ -1536,6 +1564,7 @@ case "$command" in
 		[ $# != 0 ] && usage 1 "Too many status arguments (expected no additional arguments)"
 		check_prerequisites
 		status "$@"
+		reuse_key_check
 		;;
 
 	sshfp|ssh)

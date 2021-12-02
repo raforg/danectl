@@ -3,7 +3,7 @@ CHANGELOG
 
 0.7.2 (20211202)
 
-    - Fixed certbot invocation bug introduced in 0.7.1
+    - Fixed certbot invocation bug introduced in 0.7.1 (spotted by github/ran-deh)
     - status/tlsa-check: Add check for reuse_key (and fix if necessary)
     - status: Remove redundant use of $@
 

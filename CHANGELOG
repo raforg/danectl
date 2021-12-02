@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+0.7.2 (20211202)
+
+    - Fixed certbot invocation bug introduced in 0.7.1
+    - status/tlsa-check: Add check for reuse_key (and fix if necessary)
+    - status: Remove redundant use of $@
+
 0.7.1 (20211014)
 
     - doc: Fixed usage typo
@@ -114,7 +120,7 @@ CHANGELOG
 
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
-    Date: 20211014
+    Date: 20211202
     Author: raf <raf@raf.org>
 
 

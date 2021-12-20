@@ -564,14 +564,15 @@ that yourself by outputting records in the well-known Bind9 zonefile format.
 When performing a key rollover, and when performing any of the checks, any
 superfluous records that are to be removed are output in the form of
 comments where the leading semicolon (";") is not followed by a space (" ").
-That makes them easy to identify with grep (i.e., grep "^;[^ ]" for
-superfluous records to be removed, and grep -v "^;[^ ]" for missing records
-to be published). Perhaps a plugin system could be added to automate updates
-for different DNS server software and different DNS service providers, but
-it should be easy enough to write a separate script to read the output of
-danectl and do what you need with it. And anyway, DANE-related DNS updates
-probably won't be frequent enough for their automation to be important. But
-of course, your mileage may vary.
+That makes them easy to identify with grep (i.e., grep '^;[^ ]' for
+superfluous records to be removed, and grep -v '^;[^ ]' for missing records
+to be published). In either case, the grep output includes a comment that can
+be removed by piping through grep -v '; ' as well. Perhaps a plugin system
+could be added to automate updates for different DNS server software and
+different DNS service providers, but it should be easy enough to write a
+separate script to read the output of danectl and do what you need with it.
+And anyway, DANE-related DNS updates probably won't be frequent enough for
+their automation to be important. But of course, your mileage may vary.
 
 REQUIREMENTS
 

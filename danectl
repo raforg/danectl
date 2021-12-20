@@ -944,6 +944,7 @@ status()
 
 reuse_key_check()
 {
+	prefix="$1"
 	for role in current next
 	do
 		for symlink in "$le/$role"/*
@@ -957,7 +958,7 @@ reuse_key_check()
 			grep -q "reuse_key = True" "$fname" && continue
 			del_line "$fname" reuse_key
 			add_line "$fname" "reuse_key = True"
-			echo "$certname: Not reusing key on renewal (fixed)"
+			echo "$prefix$certname: Not reusing key on renewal (fixed)"
 		done
 	done | sort
 }
@@ -1521,7 +1522,7 @@ case "$command" in
 		check_prerequisites
 		[ $# != 0 ] && check_both_certnames "$@"
 		for certname in ${*:-`all_certnames`}; do tlsa_check "$certname"; done
-		[ $# = 0 ] && reuse_key_check
+		[ $# = 0 ] && reuse_key_check '; '
 		;;
 
 	add-reload|reload-add|ar|ra)

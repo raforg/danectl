@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+0.7.3 (20211221)
+
+    - tlsa-check: Fixed output of new reuse_key check to match greppability convention
+    - tlsa-check doc: Add note in manpage to pipe grep output through grep -v '; ' as well
+
 0.7.2 (20211202)
 
     - Fixed certbot invocation bug introduced in 0.7.1 (spotted by github/ran-deh)
@@ -120,7 +125,7 @@ CHANGELOG
 
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
-    Date: 20211202
+    Date: 20211221
     Author: raf <raf@raf.org>
 
 

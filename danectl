@@ -748,7 +748,7 @@ tlsa_role()
 	for t in $tlsa
 	do
 		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
-		echo "$prefix$domain\tIN\tTLSA\t3 1 1 $hash"
+		echo -e "$prefix$domain\tIN\tTLSA\t3 1 1 $hash"
 	done
 }
 

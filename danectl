@@ -748,7 +748,7 @@ tlsa_role()
 	for t in $tlsa
 	do
 		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
-		echo "$prefix$domain\tIN\tTLSA\t3 1 1 $hash"
+		echo -e "$prefix$domain\tIN\tTLSA\t3 1 1 $hash"
 	done
 }
 
@@ -791,7 +791,7 @@ tlsa_check()
 		else
 			[ "$missing" = 0 ] && echo "; Missing $certname current (must be published)"
 			missing=1
-			echo "$domain\tIN\tTLSA\t3 1 1 $hash_current"
+			echo -e "$domain\tIN\tTLSA\t3 1 1 $hash_current"
 		fi
 	done
 	missing=0
@@ -804,7 +804,7 @@ tlsa_check()
 		else
 			[ "$missing" = 0 ] && echo "; Missing $certname next (must be published)"
 			missing=1
-			echo "$domain\tIN\tTLSA\t3 1 1 $hash_next"
+			echo -e "$domain\tIN\tTLSA\t3 1 1 $hash_next"
 		fi
 	done
 	superfluous=0
@@ -971,7 +971,7 @@ tlsa_hash()
 	role="$1"
 	certname="$2"
 	cert="$le/$role/$certname/cert.pem"
-	openssl x509 -in "$cert" -noout -pubkey | openssl rsa -pubin -outform DER 2>/dev/null | sha256sum | sed 's/\s.*$//'
+	openssl x509 -in "$cert" -noout -pubkey | openssl pkey -pubin -outform DER 2>/dev/null | sha256sum | sed 's/\s.*$//'
 }
 
 # Run a command unless testing, print it first if verbose

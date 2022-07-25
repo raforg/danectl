@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+0.7.4 (20220725)
+
+    - Add support for non-rsa keys (e.g., ecdsa) (github/csarn Christoph Sarnowski)
+    - Fix tabs in TLSA record output on some systems (with github/csarn Christoph Sarnowski)
+
 0.7.3 (20211221)
 
     - tlsa-check: Fixed output of new reuse_key check to match greppability convention
@@ -125,7 +130,7 @@ CHANGELOG
 
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
-    Date: 20211221
+    Date: 20220725
     Author: raf <raf@raf.org>
 
 

@@ -576,10 +576,10 @@ their automation to be important. But of course, your mileage may vary.
 
 REQUIREMENTS
 
-For TLSA usage, danectl requires /bin/sh, ls, sed, grep, host, readlink,
+For TLSA usage, danectl requires /bin/sh, ls, sed, grep, ldns, readlink,
 certbot, openssl, sha256sum, and root privileges.
 
-For SSHFP usage, danectl requires /bin/sh, sed, host, perl, and ssh-keygen.
+For SSHFP usage, danectl requires /bin/sh, sed, ldns, perl, and ssh-keygen.
 
 For OPENPGPKEY usage, danectl requires /bin/sh, perl, and gpg.
 
@@ -785,7 +785,7 @@ tlsa_check()
 	for t in $tlsa
 	do
 		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
-		if host -t tlsa "$domain" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_current"
+		if drill tlsa "$domain" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_current"
 		then
 			:
 		else
@@ -798,7 +798,7 @@ tlsa_check()
 	for t in $tlsa
 	do
 		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
-		if host -t tlsa "$domain" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_next"
+		if drill tlsa "$domain" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_next"
 		then
 			:
 		else
@@ -811,7 +811,7 @@ tlsa_check()
 	for t in $tlsa
 	do
 		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
-		extra="`host -t tlsa \"$domain\" | grep TLSA | sed -e 's/^/;/' -e 's/ has /.	/' -e 's/ record /	/' -e 'y/ABCDEF/abcdef/' -e 's/TLSa/TLSA/' -e 's/ \([a-f0-9][a-f0-9]*\)$/\1/' | grep -v \"$hash_current\" | grep -v \"$hash_next\"`"
+		extra="`drill tlsa \"$domain\" | grep TLSA | sed -e 's/^/;/' -e 's/ has /.	/' -e 's/ record /	/' -e 'y/ABCDEF/abcdef/' -e 's/TLSa/TLSA/' -e 's/ \([a-f0-9][a-f0-9]*\)$/\1/' | grep -v \"$hash_current\" | grep -v \"$hash_next\"`"
 		if [ -n "$extra" ]
 		then
 			[ "$superfluous" = 0 ] && echo ";; Superfluous $certname (should be removed)"
@@ -1057,7 +1057,7 @@ check_prerequisites()
 	[ ! -d "$le/current" ] && mkdir "$le/current"
 	[ ! -d "$le/next" ] && mkdir "$le/next"
 
-	for cmd in ls sed grep host readlink certbot openssl sha256sum
+	for cmd in ls sed grep ldns readlink certbot openssl sha256sum
 	do
 		case "`which $cmd`" in /*) ;; *) die "Failed to find $cmd";; esac
 	done
@@ -1116,7 +1116,7 @@ all_certnames()
 
 check_sshfp_prerequisites()
 {
-	for cmd in sed host perl ssh-keygen
+	for cmd in sed drill perl ssh-keygen
 	do
 		case "`which $cmd`" in /*) ;; *) die "Failed to find $cmd";; esac
 	done
@@ -1139,7 +1139,7 @@ sshfp_check()
 		use strict;
 		use warnings;
 		my %current = map { $_ =~ /SSHFP (\d+ \d+ \S+)$/; ($1, 1) } split /\n/, `ssh-keygen -r "'"$hostname"'"`;
-		my %published = map { $_ =~ /SSHFP record (\d+ \d+ \S+)(?:\s+(\S+))?$/; (lc($1 . ($2 // "")), 1) } grep { /has SSHFP record/ } split /\n/, `host -t sshfp "'"$hostname"'"`;
+		my %published = map { $_ =~ /SSHFP record (\d+ \d+ \S+)(?:\s+(\S+))?$/; (lc($1 . ($2 // "")), 1) } grep { /has SSHFP record/ } split /\n/, `drill sshfp "'"$hostname"'"`;
 		my $missing = 0;
 		for my $sshfp (sort keys %current)
 		{
@@ -1259,7 +1259,7 @@ openpgpkey_check()
 		my $superfluous = "";
 		my $start = ('$oneline' == 0) ? "(\n\t" : "";
 		my $end = ('$oneline' == 0) ? "\t)" : "";
-		for (grep { /has OPENPGPKEY record/ } split /\n/, `host -t openpgpkey "$prefix.$origin"`)
+		for (grep { /has OPENPGPKEY record/ } split /\n/, `drill openpgpkey "$prefix.$origin"`)
 		{
 			my ($name, $rrdata) = $_ =~ /^(\S+) has OPENPGPKEY record (.+)$/;
 			$name = substr($name, 0, -(length($domain) + 1));
@@ -1371,7 +1371,7 @@ smimea_check()
 		my $middle = ('$oneline' == 0) ? "\n\t" : " ";
 		my $end = ('$oneline' == 0) ? "\t)" : "";
 		my $lead = ('$oneline' == 0) ? "\t" : "";
-		for (grep { /has SMIMEA record/ } split /\n/, `host -t smimea "$prefix.$origin"`)
+		for (grep { /has SMIMEA record/ } split /\n/, `drill smimea "$prefix.$origin"`)
 		{
 			my ($name, $rrdata) = $_ =~ /^(\S+) has SMIMEA record (.+)$/;
 			$name = substr($name, 0, -(length($domain) + 1));

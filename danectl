@@ -576,10 +576,10 @@ their automation to be important. But of course, your mileage may vary.
 
 REQUIREMENTS
 
-For TLSA usage, danectl requires /bin/sh, ls, sed, grep, ldns, readlink,
+For TLSA usage, danectl requires /bin/sh, ls, sed, grep, drill, readlink,
 certbot, openssl, sha256sum, and root privileges.
 
-For SSHFP usage, danectl requires /bin/sh, sed, ldns, perl, and ssh-keygen.
+For SSHFP usage, danectl requires /bin/sh, sed, drill, perl, and ssh-keygen.
 
 For OPENPGPKEY usage, danectl requires /bin/sh, perl, and gpg.
 
@@ -1057,7 +1057,7 @@ check_prerequisites()
 	[ ! -d "$le/current" ] && mkdir "$le/current"
 	[ ! -d "$le/next" ] && mkdir "$le/next"
 
-	for cmd in ls sed grep ldns readlink certbot openssl sha256sum
+	for cmd in ls sed grep drill readlink certbot openssl sha256sum
 	do
 		case "`which $cmd`" in /*) ;; *) die "Failed to find $cmd";; esac
 	done

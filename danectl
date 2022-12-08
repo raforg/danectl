@@ -785,7 +785,7 @@ tlsa_check()
 	for t in $tlsa
 	do
 		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
-		if drill tlsa "$domain" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_current"
+		if drill -Q tlsa "$domain" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_current"
 		then
 			:
 		else
@@ -798,7 +798,7 @@ tlsa_check()
 	for t in $tlsa
 	do
 		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
-		if drill tlsa "$domain" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_next"
+		if drill -Q tlsa "$domain" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_next"
 		then
 			:
 		else
@@ -811,7 +811,7 @@ tlsa_check()
 	for t in $tlsa
 	do
 		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
-		extra="`drill tlsa \"$domain\" | grep TLSA | sed -e 's/^/;/' -e 's/ has /.	/' -e 's/ record /	/' -e 'y/ABCDEF/abcdef/' -e 's/TLSa/TLSA/' -e 's/ \([a-f0-9][a-f0-9]*\)$/\1/' | grep -v \"$hash_current\" | grep -v \"$hash_next\"`"
+		extra="`drill -Q tlsa \"$domain\" | grep TLSA | sed -e 's/^/;/' -e 's/ has /.	/' -e 's/ record /	/' -e 'y/ABCDEF/abcdef/' -e 's/TLSa/TLSA/' -e 's/ \([a-f0-9][a-f0-9]*\)$/\1/' | grep -v \"$hash_current\" | grep -v \"$hash_next\"`"
 		if [ -n "$extra" ]
 		then
 			[ "$superfluous" = 0 ] && echo ";; Superfluous $certname (should be removed)"
@@ -1139,7 +1139,7 @@ sshfp_check()
 		use strict;
 		use warnings;
 		my %current = map { $_ =~ /SSHFP (\d+ \d+ \S+)$/; ($1, 1) } split /\n/, `ssh-keygen -r "'"$hostname"'"`;
-		my %published = map { $_ =~ /SSHFP record (\d+ \d+ \S+)(?:\s+(\S+))?$/; (lc($1 . ($2 // "")), 1) } grep { /has SSHFP record/ } split /\n/, `drill sshfp "'"$hostname"'"`;
+		my %published = map { $_ =/(\d+ \d+ \S+)(?:\s+(\S+))?$/; ($1, 1) } split /\n/, `drill -Q sshfp "'"$hostname"'"`;
 		my $missing = 0;
 		for my $sshfp (sort keys %current)
 		{
@@ -1259,7 +1259,7 @@ openpgpkey_check()
 		my $superfluous = "";
 		my $start = ('$oneline' == 0) ? "(\n\t" : "";
 		my $end = ('$oneline' == 0) ? "\t)" : "";
-		for (grep { /has OPENPGPKEY record/ } split /\n/, `drill openpgpkey "$prefix.$origin"`)
+		for (grep { /has OPENPGPKEY record/ } split /\n/, `drill -Q openpgpkey "$prefix.$origin"`)
 		{
 			my ($name, $rrdata) = $_ =~ /^(\S+) has OPENPGPKEY record (.+)$/;
 			$name = substr($name, 0, -(length($domain) + 1));
@@ -1371,7 +1371,7 @@ smimea_check()
 		my $middle = ('$oneline' == 0) ? "\n\t" : " ";
 		my $end = ('$oneline' == 0) ? "\t)" : "";
 		my $lead = ('$oneline' == 0) ? "\t" : "";
-		for (grep { /has SMIMEA record/ } split /\n/, `drill smimea "$prefix.$origin"`)
+		for (grep { /has SMIMEA record/ } split /\n/, `drill -Q smimea "$prefix.$origin"`)
 		{
 			my ($name, $rrdata) = $_ =~ /^(\S+) has SMIMEA record (.+)$/;
 			$name = substr($name, 0, -(length($domain) + 1));

@@ -122,10 +122,10 @@ To uninstall danectl:
 
 # REQUIREMENTS
 
-For TLSA usage, danectl requires /bin/sh, ls, sed, grep, host, readlink,
+For TLSA usage, danectl requires /bin/sh, ls, sed, grep, drill, readlink,
 certbot, openssl, sha256sum, and root privileges.
 
-For SSHFP usage, danectl requires /bin/sh, sed, host, perl, and ssh-keygen.
+For SSHFP usage, danectl requires /bin/sh, sed, drill, perl, and ssh-keygen.
 
 For OPENPGPKEY usage, danectl requires /bin/sh, perl, and gpg.
 

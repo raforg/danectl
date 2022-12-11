@@ -1,6 +1,8 @@
 #!/bin/sh
 # danectl - DNSSEC DANE implementation manager
 # https://raf.org/danectl
+# https://github.com/raforg/dan
+# https://codeberg.org/raforg/danectl
 #
 # Copyright (C) 2021-2022 raf <raf@raf.org>
 #
@@ -25,6 +27,7 @@ date=20220725
 author="raf <raf@raf.org>"
 url=https://raf.org/danectl
 git=https://github.com/raforg/danectl
+git2=https://codeberg.org/raforg/danectl
 
 # Some defaults
 
@@ -99,7 +102,8 @@ Version: $version
 Date: $date
 Author: $author
 URL: $url
-URL: $git
+GIT: $git
+GIT: $git2
 
 Copyright (C) 2021-2022 $author
 
@@ -605,6 +609,7 @@ URL
 
   $url
   $git
+  $git2
 
 HELP
 }

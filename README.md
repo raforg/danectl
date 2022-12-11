@@ -137,6 +137,7 @@ On systems like Solaris, /usr/xpg4/bin/sh is used instead of /bin/sh.
 
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
+    GIT: https://codeberg.org/raforg/danectl
     Date: 20220725
     Author: raf <raf@raf.org>
 

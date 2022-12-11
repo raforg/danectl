@@ -1,4 +1,3 @@
-#
 # danectl - DNSSEC DANE implementation manager
 # https://raf.org/danectl
 #
@@ -38,6 +37,10 @@ DANECTL_DIST=$(DANECTL_ID).tar.gz
 DANECTL_MANFILE=$(DANECTL_NAME).$(APP_MANSECT)
 DANECTL_HTMLFILE=$(DANECTL_NAME).$(APP_MANSECT).html
 
+DANECTL_NSUPDATE_NAME=danectl-nsupdate
+DANECTL_NSUPDATE_MANFILE=$(DANECTL_NSUPDATE_NAME).$(APP_MANSECT)
+DANECTL_NSUPDATE_HTMLFILE=$(DANECTL_NSUPDATE_NAME).$(APP_MANSECT).html
+
 install: install-bin install-man
 
 dist: clean $(DANECTL_MANFILE)
@@ -57,9 +60,10 @@ install-bin:
 	install -m 755 $(DANECTL_NAME) $(APP_INSDIR)
 	@[ ! -x /usr/xpg4/bin/sh ] || sed 's,^#!/bin/sh$$,#!/usr/xpg4/bin/sh,' < $(DANECTL_NAME) > $(APP_INSDIR)/$(DANECTL_NAME)
 
-install-man: $(DANECTL_MANFILE)
+install-man: man
 	mkdir -p $(APP_MANDIR)
 	install -m 644 $(DANECTL_MANFILE) $(APP_MANDIR)
+	install -m 644 $(DANECTL_NSUPDATE_MANFILE) $(APP_MANDIR)
 
 uninstall: uninstall-bin uninstall-man
 
@@ -68,14 +72,30 @@ uninstall-bin:
 
 uninstall-man:
 	[ ! -f $(APP_MANDIR)/$(DANECTL_MANFILE) ] || rm -r $(APP_MANDIR)/$(DANECTL_MANFILE)
+	[ ! -f $(APP_MANDIR)/$(DANECTL_NSUPDATE_MANFILE) ] || rm -r $(APP_MANDIR)/$(DANECTL_NSUPDATE_MANFILE)
 
-%.$(APP_MANSECT): %
+man: $(DANECTL_MANFILE) $(DANECTL_NSUPDATE_MANFILE)
+
+html: $(DANECTL_HTMLFILE) $(DANECTL_NSUPDATE_HTMLFILE)
+
+$(DANECTL_NAME).$(APP_MANSECT): $(DANECTL_NAME)
 	./$< help | perl -pe 's/^([A-Z ]+)$$/=head1 $$1/' | pod2man --section='$(APP_MANSECT)' --center='$(APP_MANSECTNAME)' --name='$(shell echo $(DANECTL_NAME) | tr a-z A-Z)' --release='$(DANECTL_ID)' --date='$(DANECTL_DATE)' --quotes=none > $@
 
-%.$(APP_MANSECT).html: %
+$(DANECTL_NAME).$(APP_MANSECT).html: $(DANECTL_NAME)
 	./$< help | perl -pe 's/^([A-Z ]+)$$/=head1 $$1/' | pod2html --noindex --title='$(DANECTL_NAME)($(APP_MANSECT))' > $@ 2>/dev/null
 	rm -r pod2htm*.tmp
 
-clean:
-	rm -f $(DANECTL_NAME).$(APP_MANSECT) $(DANECTL_NAME).$(APP_MANSECT).html
+%: %.pod
+	pod2man --section='$(APP_MANSECT)' --center='$(APP_MANSECTNAME)' --name='$(shell echo $@ | tr a-z A-Z | sed "s/\.$(APP_MANSECT)$$//")' --release='$(DANECTL_ID)' --date='$(DANECTL_DATE)' --quotes=none $< > $@
 
+%.html: %.pod
+	pod2html --noindex --title='$<($(APP_MANSECT))' $< > $@ 2>/dev/null
+	rm -r pod2htm*.tmp
+
+clean:
+	rm -f *.$(APP_MANSECT) *.$(APP_MANSECT).html
+
+test:
+	./runtests
+
+# vi:set ts=4 sw=4:

@@ -1,0 +1,64 @@
+# danectl - DNSSEC DANE implementation manager
+# https://raf.org/danectl
+# https://github.com/raforg/danectl
+# https://codeberg.org/raforg/danectl
+#
+# Copyright (C) 2021-2022 raf <raf@raf.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, see <https://www.gnu.org/licenses/>.
+#
+# 20220725 raf <raf@raf.org>
+
+=head1 NAME
+
+I<danectl-nsupdate> - Adapt I<danectl> DNS RR output for BIND9 I<nsupdate>
+
+=head1 SYNOPSIS
+
+  danectl rollover <cert-name> | danectl-nsupdate <ttl> | nsupdate
+  danectl tlsa-check <cert-name> | danectl-nsupdate <ttl> | nsupdate
+  danectl sshfp-check <hostname> | danectl-nsupdate <ttl> | nsupdate
+  danectl -1 smimea-check <cert.pem> | danectl-nsupdate <ttl> | nsupdate
+  danectl -1 openpgpkey-check <email> | danectl-nsupdate <ttl> | nsupdate
+
+=head1 DESCRIPTION
+
+I<danectl-nsupdate> is an output adapter for I<danectl(1)>. Certain
+I<danectl(1)> commands (see the examples above) produce output that
+indicates DNS RRs that need to be removed or added to the DNS.
+
+This adapter is a filter that accepts that output from I<danectl(1)>, and
+produces the corresponding input for I<nsupdate(1)> to implement the
+indicated changes via dynamic DNS updates.
+
+There are many ways to implement changes to the DNS. I<danectl> currently
+provides one adapter for this purpose. Contributions of more adapters would
+be welcomed.
+
+=head1 LIMITATIONS
+
+The multi-line I<danectl(1)> output for I<SMIMEA> and I<OPENPGPKEY> DNS RRs
+is not supported. The single-line output must be used (see the examples
+above).
+
+=head1 SEE ALSO
+
+I<danectl(1)>, I<nsupdate(1)>.
+
+=head1 AUTHOR
+
+raf E<lt>raf@raf.orgE<gt>
+
+=cut
+

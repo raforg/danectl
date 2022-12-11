@@ -1,0 +1,13 @@
+
+;; Remove the following old records from the DNS
+;; raf.org previous
+;_443._tcp.raf.org.    IN      TLSA    3 1 1 f768f336539ff2890b202c1dbf44f9e825c4d2fb7a7e62b6f7beb859e28246f0
+;_443._tcp.www.raf.org.        IN      TLSA    3 1 1 f768f336539ff2890b202c1dbf44f9e825c4d2fb7a7e62b6f7beb859e28246f0
+;_443._tcp.mta-sts.raf.org.    IN      TLSA    3 1 1 f768f336539ff2890b202c1dbf44f9e825c4d2fb7a7e62b6f7beb859e28246f0
+
+; Publish the following new records in the DNS
+; raf.org next
+_443._tcp.raf.org.     IN      TLSA    3 1 1 4629f89beed6b9903b72c8ba5976e80ae2ea720d8d45015973daa84c04827789
+_443._tcp.www.raf.org. IN      TLSA    3 1 1 4629f89beed6b9903b72c8ba5976e80ae2ea720d8d45015973daa84c04827789
+_443._tcp.mta-sts.raf.org.     IN      TLSA    3 1 1 4629f89beed6b9903b72c8ba5976e80ae2ea720d8d45015973daa84c04827789
+

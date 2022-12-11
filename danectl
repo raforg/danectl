@@ -1,7 +1,7 @@
 #!/bin/sh
 # danectl - DNSSEC DANE implementation manager
 # https://raf.org/danectl
-# https://github.com/raforg/dan
+# https://github.com/raforg/danectl
 # https://codeberg.org/raforg/danectl
 #
 # Copyright (C) 2021-2022 raf <raf@raf.org>
@@ -575,8 +575,9 @@ be removed by piping through grep -v '; ' as well. Perhaps a plugin system
 could be added to automate updates for different DNS server software and
 different DNS service providers, but it should be easy enough to write a
 separate script to read the output of danectl and do what you need with it.
-And anyway, DANE-related DNS updates probably won't be frequent enough for
-their automation to be important. But of course, your mileage may vary.
+Danectl comes with one such script: danectl-nsupdate(1), which reads the
+output from danectl and transforms it into input for the nsupdate(1)
+dynamic DNS update utility.
 
 REQUIREMENTS
 
@@ -591,6 +592,8 @@ For SMIMEA usage, danectl requires /bin/sh, perl, and openssl.
 
 On systems like Solaris, /usr/xpg4/bin/sh is used instead of /bin/sh.
 
+The danectl-nsupdate(1) output adapter requires perl.
+
 LICENSE
 
 Danectl is released under the terms of the GPLv2+
@@ -598,8 +601,8 @@ https://www.gnu.org/licenses.
 
 SEE ALSO
 
-certbot(1), danebot(1), ssh(1), ssh_config(5), gpg(1), openssl(1),
-RFC6698, RFC7671, RFC7672, RFC4255, RFC7929, RFC8162.
+certbot(1), ssh(1), ssh_config(5), gpg(1), openssl(1), danectl_nsupdate(1),
+nsupdate(1), RFC6698, RFC7671, RFC7672, RFC4255, RFC7929, RFC8162.
 
 AUTHOR
 

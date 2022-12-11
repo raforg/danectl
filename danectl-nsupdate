@@ -1,0 +1,40 @@
+#!/usr/bin/env perl
+# danectl - DNSSEC DANE implementation manager
+# https://raf.org/danectl
+# https://github.com/raforg/danectl
+# https://codeberg.org/raforg/danectl
+#
+# Copyright (C) 2021-2022 raf <raf@raf.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, see <https://www.gnu.org/licenses/>.
+#
+# 20220725 raf <raf@raf.org>
+
+# danectl-nsupdate - Adapt danectl DNS RR output for BIND9 nsupdate
+# usage: danectl rollover <cert-name> | danectl-nsupdate ttl | nsupdate
+
+my $ttl = shift or die "usage: $0 ttl\n";
+die "$0: Invalid ttl: $ttl (must be an integer)\n" unless $ttl =~ /^\d+$/;
+print "ttl $ttl\n";
+
+while (<>)
+{
+	next if /; /; # Skip real comments
+	s/^;/update delete /, s/[ \t]+/ /g, print, next if /^;_/; # Deletions
+	s/^/update add /, s/[ \t]+/ /g, print, next if /^_/; # Additions
+}
+
+print "send\n";
+
+# vi:set ts=4 sw=4:

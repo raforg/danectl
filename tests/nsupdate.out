@@ -1,0 +1,8 @@
+ttl 300
+update delete _443._tcp.raf.org. IN TLSA 3 1 1 f768f336539ff2890b202c1dbf44f9e825c4d2fb7a7e62b6f7beb859e28246f0
+update delete _443._tcp.www.raf.org. IN TLSA 3 1 1 f768f336539ff2890b202c1dbf44f9e825c4d2fb7a7e62b6f7beb859e28246f0
+update delete _443._tcp.mta-sts.raf.org. IN TLSA 3 1 1 f768f336539ff2890b202c1dbf44f9e825c4d2fb7a7e62b6f7beb859e28246f0
+update add _443._tcp.raf.org. IN TLSA 3 1 1 4629f89beed6b9903b72c8ba5976e80ae2ea720d8d45015973daa84c04827789
+update add _443._tcp.www.raf.org. IN TLSA 3 1 1 4629f89beed6b9903b72c8ba5976e80ae2ea720d8d45015973daa84c04827789
+update add _443._tcp.mta-sts.raf.org. IN TLSA 3 1 1 4629f89beed6b9903b72c8ba5976e80ae2ea720d8d45015973daa84c04827789
+send

@@ -1313,8 +1313,7 @@ openpgpkey_check()
 		my $fetch_dns_openpgpkey = ($ENV{HAVE_HOST} eq "1") ? `host -t openpgpkey "$prefix.$origin" | grep -v "has no .* record"` : `drill -t "$prefix.$origin" openpgpkey | grep -v "^;" | grep -v "^\$" | sed "s/	[0-9][0-9]*	IN	/ /"`;
 		for (grep { /OPENPGPKEY/ } split /\n/, $fetch_dns_openpgpkey)
 		{
-			my ($name, $rrdata) = $_ =~ /^(\S+)(?: has)?\s+OPENPGPKEY(?: record)?\s+(.+)$/;
-			$name = substr($name, 0, -(length($domain) + 1));
+			my ($rrdata) = $_ =~ /^\S+(?: has)?\s+OPENPGPKEY(?: record)?\s+(.+)$/;
 			$rrdata =~ s/ //g;
 			$rrdata =~ s/(.{1,56})/ $1/g;
 			$rrdata =~ s/^ //g;
@@ -1428,8 +1427,7 @@ smimea_check()
 		my $fetch_dns_smimea = ($ENV{HAVE_HOST} eq "1") ? `host -t smimea "$prefix.$origin" | grep -v "has no .* record"` : `drill -t "$prefix.$origin" smimea | grep -v "^;" | grep -v "^\$" | sed "s/	[0-9][0-9]*	IN	/ /"`;
 		for (grep { /SMIMEA/ } split /\n/, $fetch_dns_smimea)
 		{
-			my ($name, $rrdata) = $_ =~ /^(\S+)(?: has)?\s+SMIMEA(?: record)?\s+(.+)$/;
-			$name = substr($name, 0, -(length($domain) + 1));
+			my ($rrdata) = $_ =~ /^\S+(?: has)?\s+SMIMEA(?: record)?\s+(.+)$/;
 			$rrdata = lc($rrdata);
 			$rrdata =~ s/^3\s*0\s*0\s*//;
 			$rrdata =~ s/ //g;

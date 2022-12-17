@@ -122,7 +122,7 @@ To uninstall `danectl`:
 
 # REQUIREMENTS
 
-In all cases, `danectl` requires `/bin/sh`, and `host`.
+In all cases, `danectl` requires `/bin/sh` and `host` (or `drill`).
 
 For TLSA usage, `danectl` also requires `ls`, `sed`, `grep`, `readlink`, `certbot`,
 `openssl`, `sha256sum`, and root privileges (for `certbot`).

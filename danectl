@@ -581,7 +581,7 @@ dynamic DNS update utility.
 
 REQUIREMENTS
 
-In all cases, danectl requires /bin/sh, and host.
+In all cases, danectl requires /bin/sh and host (or drill).
 
 For TLSA usage, danectl also requires ls, sed, grep, readlink, certbot,
 openssl, sha256sum, and root privileges (for certbot).
@@ -674,6 +674,21 @@ default_certbot_command()
 			echo certonly
 			;;
 	esac
+}
+
+# Fetch DNS RRs using either host or drill
+
+fetch_dns()
+{
+	dns_type="$1"
+	dns_name="$2"
+
+	if [ $HAVE_HOST = 1 ]
+	then
+		host -t "$dns_type" "$dns_name"
+	else
+		drill "$dns_name" "$dns_type" | grep -v '^;' | grep -v '^$' | sed 's/[0-9][0-9]*	IN	//'
+	fi
 }
 
 # Create a new original/current cert
@@ -795,7 +810,7 @@ tlsa_check()
 	for t in $tlsa
 	do
 		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
-		if host -t tlsa "$domain" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_current"
+		if fetch_dns tlsa "$domain" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_current"
 		then
 			:
 		else
@@ -808,7 +823,7 @@ tlsa_check()
 	for t in $tlsa
 	do
 		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
-		if host -t tlsa "$domain" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_next"
+		if fetch_dns tlsa "$domain" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_next"
 		then
 			:
 		else
@@ -821,7 +836,7 @@ tlsa_check()
 	for t in $tlsa
 	do
 		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
-		extra="`host -t tlsa \"$domain\" | grep TLSA | sed -e 's/^/;/' -e 's/ has /.	/' -e 's/ record /	/' -e 'y/ABCDEF/abcdef/' -e 's/TLSa/TLSA/' -e 's/ \([a-f0-9][a-f0-9]*\)$/\1/' | grep -v \"$hash_current\" | grep -v \"$hash_next\"`"
+		extra="`fetch_dns tlsa \"$domain\" | grep TLSA | sed -e 's/^/;/' -e 's/ has /.	/' -e 's/ record /	/' -e 'y/ABCDEF/abcdef/' -e 's/TLSa/TLSA/' -e 's/ \([a-f0-9][a-f0-9]*\)$/\1/' | grep -v \"$hash_current\" | grep -v \"$hash_next\"`"
 		if [ -n "$extra" ]
 		then
 			[ "$superfluous" = 0 ] && echo ";; Superfluous $certname (should be removed)"
@@ -874,9 +889,9 @@ reload()
 	eval reload="\$reload_$shcertname"
 	for service in $reload
 	do
-		case "`which systemctl`" in /*) run systemctl reload "$service"; continue;; esac
-		case "`which service`" in /*) run service "$service" reload; continue;; esac
-		case "`which rcctl`" in /*) run rcctl reload "$service"; continue;; esac
+		case "`which systemctl 2>/dev/null`" in /*) run systemctl reload "$service"; continue;; esac
+		case "`which service 2>/dev/null`" in /*) run service "$service" reload; continue;; esac
+		case "`which rcctl 2>/dev/null`" in /*) run rcctl reload "$service"; continue;; esac
 		if [ -x /etc/init.d/"$service" ]; then run /etc/init.d/"$service" reload; continue; fi
 		if [ -x /etc/rc.d/"$service" ]; then run /etc/rc.d/"$service" reload; continue; fi
 		if [ -x /usr/local/etc/rc.d/"$service" ]; then run /usr/local/etc/rc.d/"$service" reload; continue; fi
@@ -1058,6 +1073,25 @@ shcertname()
 	echo "$certname" | sed 's/\./_/g'
 }
 
+# Check for host or drill
+
+check_host_or_drill()
+{
+	case "`which host 2>/dev/null`" in
+		/*) [ -z "$DANECTL_TEST_DRILL" ] && HAVE_HOST=1 || HAVE_HOST=0;;
+		*)  HAVE_HOST=0;;
+	esac
+
+	case "`which drill 2>/dev/null`" in
+		/*) [ -z "$DANECTL_TEST_HOST" ] && HAVE_DRILL=1 || HAVE_DRILL=0;;
+		*)  HAVE_DRILL=0;;
+	esac
+
+	[ $HAVE_HOST = 0 -a $HAVE_DRILL = 0 ] && die "Failed to find host or drill"
+
+	export HAVE_HOST # For any perl sub-processes
+}
+
 # Check the prerequisites
 
 check_prerequisites()
@@ -1067,10 +1101,12 @@ check_prerequisites()
 	[ ! -d "$le/current" ] && mkdir "$le/current"
 	[ ! -d "$le/next" ] && mkdir "$le/next"
 
-	for cmd in ls sed grep host readlink certbot openssl sha256sum
+	for cmd in ls sed grep readlink certbot openssl sha256sum
 	do
-		case "`which $cmd`" in /*) ;; *) die "Failed to find $cmd";; esac
+		case "`which $cmd 2>/dev/null`" in /*) ;; *) die "Failed to find $cmd";; esac
 	done
+
+	check_host_or_drill
 
 	if [ -e "$danectlrc" ]
 	then
@@ -1126,10 +1162,12 @@ all_certnames()
 
 check_sshfp_prerequisites()
 {
-	for cmd in sed host perl ssh-keygen
+	for cmd in sed perl ssh-keygen
 	do
-		case "`which $cmd`" in /*) ;; *) die "Failed to find $cmd";; esac
+		case "`which $cmd 2>/dev/null`" in /*) ;; *) die "Failed to find $cmd";; esac
 	done
+
+	check_host_or_drill
 }
 
 # Output SSHFP RRs for the current host
@@ -1149,7 +1187,8 @@ sshfp_check()
 		use strict;
 		use warnings;
 		my %current = map { $_ =~ /SSHFP (\d+ \d+ \S+)$/; ($1, 1) } split /\n/, `ssh-keygen -r "'"$hostname"'"`;
-		my %published = map { $_ =~ /SSHFP record (\d+ \d+ \S+)(?:\s+(\S+))?$/; (lc($1 . ($2 // "")), 1) } grep { /has SSHFP record/ } split /\n/, `host -t sshfp "'"$hostname"'"`;
+		my $fetch_dns_sshfp = ($ENV{HAVE_HOST} eq "1") ? `host -t sshfp "'"$hostname"'" | grep -v "has no .* record"` : `drill "'"$hostname"'" sshfp | grep -v "^;" | grep -v "^\$"`;
+		my %published = map { $_ =~ /SSHFP(?: record)?\s+(\d+ \d+ \S+)(?:\s+(\S+))?$/; (lc($1 . ($2 // "")), 1) } grep { /SSHFP/ } split /\n/, $fetch_dns_sshfp;
 		my $missing = 0;
 		for my $sshfp (sort keys %current)
 		{
@@ -1169,8 +1208,10 @@ check_openpgpkey_prerequisites()
 {
 	for cmd in gpg perl
 	do
-		case "`which $cmd`" in /*) ;; *) die "Failed to find $cmd";; esac
+		case "`which $cmd 2>/dev/null`" in /*) ;; *) die "Failed to find $cmd";; esac
 	done
+
+	check_host_or_drill
 }
 
 # Output OPENPGPKEY RR for an email
@@ -1269,9 +1310,10 @@ openpgpkey_check()
 		my $superfluous = "";
 		my $start = ('$oneline' == 0) ? "(\n\t" : "";
 		my $end = ('$oneline' == 0) ? "\t)" : "";
-		for (grep { /has OPENPGPKEY record/ } split /\n/, `host -t openpgpkey "$prefix.$origin"`)
+		my $fetch_dns_openpgpkey = ($ENV{HAVE_HOST} eq "1") ? `host -t openpgpkey "$prefix.$origin" | grep -v "has no .* record"` : `drill -t "$prefix.$origin" openpgpkey | grep -v "^;" | grep -v "^\$" | sed "s/	[0-9][0-9]*	IN	/ /"`;
+		for (grep { /OPENPGPKEY/ } split /\n/, $fetch_dns_openpgpkey)
 		{
-			my ($name, $rrdata) = $_ =~ /^(\S+) has OPENPGPKEY record (.+)$/;
+			my ($name, $rrdata) = $_ =~ /^(\S+)(?: has)?\s+OPENPGPKEY(?: record)?\s+(.+)$/;
 			$name = substr($name, 0, -(length($domain) + 1));
 			$rrdata =~ s/ //g;
 			$rrdata =~ s/(.{1,56})/ $1/g;
@@ -1294,8 +1336,10 @@ check_smimea_prerequisites()
 {
 	for cmd in openssl perl
 	do
-		case "`which $cmd`" in /*) ;; *) die "Failed to find $cmd";; esac
+		case "`which $cmd 2>/dev/null`" in /*) ;; *) die "Failed to find $cmd";; esac
 	done
+
+	check_host_or_drill
 }
 
 # Output SMIMEA RR for a certificate
@@ -1381,9 +1425,10 @@ smimea_check()
 		my $middle = ('$oneline' == 0) ? "\n\t" : " ";
 		my $end = ('$oneline' == 0) ? "\t)" : "";
 		my $lead = ('$oneline' == 0) ? "\t" : "";
-		for (grep { /has SMIMEA record/ } split /\n/, `host -t smimea "$prefix.$origin"`)
+		my $fetch_dns_smimea = ($ENV{HAVE_HOST} eq "1") ? `host -t smimea "$prefix.$origin" | grep -v "has no .* record"` : `drill -t "$prefix.$origin" smimea | grep -v "^;" | grep -v "^\$" | sed "s/	[0-9][0-9]*	IN	/ /"`;
+		for (grep { /SMIMEA/ } split /\n/, $fetch_dns_smimea)
 		{
-			my ($name, $rrdata) = $_ =~ /^(\S+) has SMIMEA record (.+)$/;
+			my ($name, $rrdata) = $_ =~ /^(\S+)(?: has)?\s+SMIMEA(?: record)?\s+(.+)$/;
 			$name = substr($name, 0, -(length($domain) + 1));
 			$rrdata = lc($rrdata);
 			$rrdata =~ s/^3\s*0\s*0\s*//;

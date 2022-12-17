@@ -581,14 +581,16 @@ dynamic DNS update utility.
 
 REQUIREMENTS
 
-For TLSA usage, danectl requires /bin/sh, ls, sed, grep, host, readlink,
-certbot, openssl, sha256sum, and root privileges.
+In all cases, danectl requires /bin/sh, and host.
 
-For SSHFP usage, danectl requires /bin/sh, sed, host, perl, and ssh-keygen.
+For TLSA usage, danectl also requires ls, sed, grep, readlink, certbot,
+openssl, sha256sum, and root privileges (for certbot).
 
-For OPENPGPKEY usage, danectl requires /bin/sh, perl, and gpg.
+For SSHFP usage, danectl also requires sed and ssh-keygen.
 
-For SMIMEA usage, danectl requires /bin/sh, perl, and openssl.
+For OPENPGPKEY usage, danectl also requires perl and gpg.
+
+For SMIMEA usage, danectl also requires perl and openssl.
 
 On systems like Solaris, /usr/xpg4/bin/sh is used instead of /bin/sh.
 

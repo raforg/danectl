@@ -135,6 +135,8 @@ For SMIMEA usage, `danectl` also requires `perl` and `openssl`.
 
 On systems like *Solaris*, `/usr/xpg4/bin/sh` is used instead of `/bin/sh`.
 
+The `danectl-zonefile` output adapter requires `perl`.
+
 The `danectl-nsupdate` output adapter requires `perl`.
 
 --------------------------------------------------------------------------------

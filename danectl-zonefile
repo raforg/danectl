@@ -1,0 +1,178 @@
+#!/usr/bin/env perl
+BEGIN { pop @INC if $INC[-1] eq '.' }
+use 5.006;
+use warnings;
+use strict;
+
+# danectl - DNSSEC DANE implementation manager
+# https://raf.org/danectl
+# https://github.com/raforg/danectl
+# https://codeberg.org/raforg/danectl
+#
+# Copyright (C) 2021-2022 raf <raf@raf.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, see <https://www.gnu.org/licenses/>.
+#
+# 20220725 raf <raf@raf.org>
+
+# danectl-zonefile - Adapt danectl DNS RR output to modify a BIND9 zonefile
+# usage: danectl rollover <cert-name> | danectl-zonectl <zonefile>
+
+my $zonefile = shift or die "usage: $0 zonefile\n";
+die "usage: $0 zonefile\n" unless $zonefile;
+die "usage: $0 is not a readable/writable file\n" unless -f $zonefile && -r _ && -w _;
+
+my $rec = qr/(?:TLSA|SSHFP|SMIMEA|OPENPGPKEY)/i;
+
+# Read the zonefile
+
+my $zone = do
+{
+	local $/;
+	open my $fh, '<', $zonefile or die "$0: failed to open $zonefile for reading: $!\n";
+	my $data = <$fh>;
+	close $fh;
+	$data;
+};
+
+# Create a backup of the zonefile
+
+open my $bakfh, '>', "$zonefile.bak" or die "$0: failed to open $zonefile.bak for writing: $!\n";
+print $bakfh $zone;
+close $bakfh;
+
+# Read (from stdin) the modifications to apply to the zonefile
+
+my %deletions;
+my %additions;
+my %comments;
+my $comments = '';
+
+while (<>)
+{
+	# Skip real comments and blank lines
+
+	$comments .= $_ if /^; /; # Record comments for additions
+	next if /^; /;
+	next if /^$/;
+
+	# Deletions (single line)
+
+	if (/^;(\S+\.\tIN\t$rec)\t([^(].*)$/smx)
+	{
+		my ($name, $data) = ($1, $2);
+		$deletions{$name} = [] unless exists $deletions{$name};
+		push @{$deletions{$name}}, $data;
+		$comments = '';
+		next;
+	}
+
+	# Deletions (multiple lines)
+
+	if (/^;(\S+\.\tIN\t$rec)\t([(])$/smx)
+	{
+		my ($name, $data) = ($1, $2);
+		$data .= "\n";
+
+		while (<>)
+		{
+			die "$0: unexpected line in multi-line deletion: $_" unless /^;/;
+			$data .= substr($_, 1); # Exlude the leading ;
+			last if /^;\t[)]$/;
+		}
+
+		$deletions{$name} = [] unless exists $deletions{$name};
+		push @{$deletions{$name}}, $data;
+		$comments = '';
+		next;
+	}
+
+	# Additions (single line)
+
+	if (/^(\S+\.\tIN\t$rec)\t([^(].*)$/smx)
+	{
+		my ($name, $data) = ($1, $2);
+		$additions{$name} = [] unless exists $additions{$name};
+		push @{$additions{$name}}, $data;
+		$comments{$name} = $comments unless exists $comments{$name};
+		$comments = '';
+		next;
+	}
+
+	# Additions (multiple lines)
+
+	if (/^(\S+\.\tIN\t$rec)\t([(])$/smx)
+	{
+		my ($name, $data) = ($1, $2);
+		$data .= "\n";
+
+		while (<>)
+		{
+			$data .= $_;
+			last if /^\t[)]$/;
+		}
+
+		$additions{$name} = [] unless exists $additions{$name};
+		push @{$additions{$name}}, $data;
+		$comments{$name} = $comments unless exists $comments{$name};
+		$comments = '';
+		next;
+	}
+}
+
+# Replace deletions with additions if possible
+
+for my $name (sort keys %deletions)
+{
+	while (scalar @{$deletions{$name}})
+	{
+		my $del_data = shift @{$deletions{$name}};
+		my $add_data = shift @{$additions{$name}};
+		my $old = "$name\t$del_data";
+		my $new = (defined $add_data) ? "$name\t$add_data" : '';
+		my $offset = index($zone, $old);
+		my $zone_before = $zone;
+		substr($zone, $offset, length($old), $new) unless $offset == -1;
+		my $changed = ($zone ne $zone_before);
+		unshift @{$additions{$name}}, $add_data unless $changed; # Handle this below
+	}
+}
+
+# Otherwise, append any remaining additions
+
+for my $name (sort keys %additions)
+{
+	my $comment = "\n" . $comments{$name};
+	my $first = 1;
+
+	while (scalar @{$additions{$name}})
+	{
+		my $add_data = shift @{$additions{$name}};
+		next unless defined $add_data;
+		# Insert a blank line before each addition unless there's one already
+		$zone = substr($zone, 0, -1) if $first && substr($zone, -2) eq "\n\n";
+		$zone .= "$comment$name\t$add_data";
+		# Only include the comment once per $name
+		$comment = '';
+		$first = 0;
+	}
+}
+
+# Save the modified zone to the zonefile
+
+open my $zonefh, '>', $zonefile or die "$0: failed to open $zonefile for writing: $!\n";
+print $zonefh $zone;
+close $zonefh;
+
+# vi:set ts=4 sw=4:

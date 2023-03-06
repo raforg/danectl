@@ -1,0 +1,33 @@
+$TTL 1d
+
+@		IN	SOA	ns.raf.org.	hostmaster.raf.org. (
+			2022061400 ; serial
+			1w         ; refresh by secondary name server (unimportant when notify is used)
+			1h         ; retry by secondary name server after failed attempt to refresh
+			2w         ; expiry of secondary name server's authority after extended failure to refresh
+			3h         ; negative cache ttl
+		)
+
+		IN	NS	dns1.zoneedit.com.
+		IN	NS	dns2.zoneedit.com.
+		IN	NS	ns.raf.org.
+
+		IN	A	139.99.156.21
+		IN	AAAA	2402:1f00:8100:400:0:0:0:31
+		IN	MX	10 raf.org.
+		IN	TXT	(
+			"v=spf1"
+			" ip4:139.99.156.21 ip6:2402:1f00:8100:400::31"
+			" -all"
+		)
+
+ns		IN	A	139.99.156.21
+		IN	AAAA	2402:1f00:8100:400:0:0:0:31
+		IN	MX	10 raf.org.
+		IN	TXT	"v=spf1 -all"
+
+www		IN	A	139.99.156.21
+		IN	AAAA	2402:1f00:8100:400:0:0:0:31
+		IN	MX	10 raf.org.
+		IN	TXT	"v=spf1 -all"
+

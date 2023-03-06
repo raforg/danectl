@@ -22,25 +22,25 @@
 
 =head1 NAME
 
-I<danectl-nsupdate> - Adapt I<danectl> DNS RR output for BIND9 I<nsupdate>
+I<danectl-zonefile> - Adapt I<danectl> DNS RR output to modify BIND9 zonefiles
 
 =head1 SYNOPSIS
 
-  danectl rollover <cert-name> | danectl-nsupdate <ttl> | nsupdate
-  danectl tlsa-check <cert-name> | danectl-nsupdate <ttl> | nsupdate
-  danectl sshfp-check <hostname> | danectl-nsupdate <ttl> | nsupdate
-  danectl -1 smimea-check <cert.pem> | danectl-nsupdate <ttl> | nsupdate
-  danectl -1 openpgpkey-check <email> | danectl-nsupdate <ttl> | nsupdate
+  danectl rollover <cert-name> | danectl-zonefile <zonefile>
+  danectl tlsa-check <cert-name> | danectl-zonefile <zonefile>
+  danectl sshfp-check <hostname> | danectl-zonefile <zonefile>
+  danectl -1 smimea-check <cert.pem> | danectl-zonefile <zonefile>
+  danectl -1 openpgpkey-check <email> | danectl-zonefile <zonefile>
 
 =head1 DESCRIPTION
 
-I<danectl-nsupdate> is an output adapter for I<danectl(1)>. Certain
+I<danectl-zonefile> is an output adapter for I<danectl(1)>. Certain
 I<danectl(1)> commands (see the examples above) produce output that
 indicates DNS RRs that need to be removed or added to the DNS.
 
-This adapter is a filter that accepts that output from I<danectl(1)>, and
-produces the corresponding input for I<nsupdate(1)> to implement the
-indicated changes via dynamic DNS updates.
+This adapter is a filter that accepts that output from I<danectl(1)>, then
+backs up and modifies the BIND9 zonefile whose name is supplied on the
+command line.
 
 There are many ways to implement changes to the DNS. I<danectl> currently
 provides two adapters for this purpose. Contributions of more adapters would
@@ -48,13 +48,18 @@ be welcomed.
 
 =head1 LIMITATIONS
 
-The multi-line I<danectl(1)> output for I<SMIMEA> and I<OPENPGPKEY> DNS RRs
-is not supported. The single-line output must be used (see the examples
-above).
+This assumes that any DNS RRs to be deleted from the zonefile were added to
+the zonefile from I<danectl(1)> output. If the RRs are not formatted exactly
+the same as in I<danectl(1)> output, it will not be detected and it will not
+be deleted. But the new RRs to be added will still be added to the zonefile.
+If this happens, the old undeleted DNS RRs will have to be manually deleted.
+
+The serial number in the SOA is not modified. That will need to be done
+separately.
 
 =head1 SEE ALSO
 
-I<danectl(1)>, I<nsupdate(1)>, I<danectl-zonefile(1)>.
+I<danectl(1)>, I<named(8)>, I<danectl-nsupdate(1)>.
 
 =head1 AUTHOR
 

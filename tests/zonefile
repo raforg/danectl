@@ -21,13 +21,22 @@
 #
 # 20220725 raf <raf@raf.org>
 
-status=0
+# Test 1 replaces old "manual" records with new ones
+# Test 2 appends new records only (no old records)
+# Test 3 replaces old automatic records (from test 2) with new ones
 
-tests/zonefile
-[ $? = 0 ] || status=1
+ex=0
 
-tests/nsupdate
-[ $? = 0 ] || status=1
+for t in 1 2 3
+do
+	cp tests/zonefile.orig$t tests/zonefile.tmp
+	cat tests/zonefile.in | ./danectl-zonefile tests/zonefile.tmp
+	diff -du tests/zonefile.new$t tests/zonefile.tmp
+	rc=$?
+	[ $rc = 0 ] && result=pass || result=fail
+	echo Test danectl-zonefile $result $t
+	rm tests/zonefile.tmp tests/zonefile.tmp.bak
+	ex="`expr $ex + $rc`"
+done
 
-exit $status
-
+exit $ex

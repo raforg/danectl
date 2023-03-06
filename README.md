@@ -49,7 +49,7 @@ that you need TLSA records for.
         danectl add-tlsa example.org _993._tcp.mail _995._tcp.mail
         danectl del-tlsa example.org _110._tcp.mail _143._tcp.mail
 
-*Danectl* can then output the TLSA records, in *Bind9* zonefile format, and
+*Danectl* can then output the TLSA records, in *BIND9* zonefile format, and
 you need to publish them in the DNS (somehow).
 
         danectl tlsa-current example.org

@@ -1,4 +1,9 @@
 #!/usr/bin/env perl
+BEGIN { pop @INC if $INC[-1] eq '.' }
+use 5.006;
+use warnings;
+use strict;
+
 # danectl - DNSSEC DANE implementation manager
 # https://raf.org/danectl
 # https://github.com/raforg/danectl

@@ -88,7 +88,7 @@ while (<>)
 		while (<>)
 		{
 			die "$0: unexpected line in multi-line deletion: $_" unless /^;/;
-			$data .= substr($_, 1); # Exlude the leading ;
+			$data .= substr($_, 1); # Exclude the leading ;
 			last if /^;\t[)]$/;
 		}
 

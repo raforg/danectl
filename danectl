@@ -89,7 +89,7 @@ commands:
 Danectl is a DNSSEC DANE implementation manager. It uses certbot(1) to create
 and manage pairs of keys for use with a TLSA 3 1 1 current + next workflow.
 It generates TLSA records for your TLS services for you to publish in the
-DNS, checks that they are correctly published, and performs key rollovers.
+DNS, checks that they are correctly published, and facilitates key rollovers.
 
 Danectl can also generate and check SSHFP records for the local SSH server.
 Danectl can also generate and check an OPENPGPKEY record for a GnuPG key.
@@ -174,7 +174,7 @@ INTRODUCTION
 Danectl is a DNSSEC DANE implementation manager. It uses certbot(1) to create
 and manage pairs of keys for use with a TLSA 3 1 1 current + next workflow.
 It generates TLSA records for your TLS services for you to publish in the
-DNS, checks that they are correctly published, and performs key rollovers.
+DNS, checks that they are correctly published, and facilitates key rollovers.
 
 Danectl can also generate and check SSHFP records for the local SSH server.
 Danectl can also generate and check an OPENPGPKEY record for a GnuPG key.

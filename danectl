@@ -37,7 +37,8 @@ quiet=
 oneline=0
 spaces=0
 le=/etc/letsencrypt
-danectlrc="$HOME/.danectlrc"
+default_danectlrc="$HOME/.danectlrc"
+danectlrc="$default_danectlrc"
 umask 022
 
 # The --help usage message
@@ -55,6 +56,7 @@ options:
  -q, --quiet                             - Quiet mode (pass -q to certbot)
  -v, --verbose                           - Verbose mode (announce actions)
  -n, --test                              - Test mode (don't perform actions)
+ -g, --group groupname                   - Refer to a subgroup of certificates
  -1, --oneline                           - Output long RRs on a single line
  -s, --spaces                            - Include spaces in --oneline output
 
@@ -138,6 +140,7 @@ SYNOPSIS
   -q, --quiet                            - Quiet mode (pass -q to certbot)
   -v, --verbose                          - Verbose mode (announce actions)
   -n, --test                             - Test mode (don't perform actions)
+  -g, --group groupname                  - Refer to a subgroup of certificates
   -1, --oneline                          - Output long RRs on a single line
   -s, --spaces                           - Include spaces in --oneline output
 
@@ -251,6 +254,45 @@ This enables test mode, preventing danectl from performing any changes. It
 implies verbose mode, causing danectl to print the actions that would have
 been performed.
 
+-g, --group groupname
+
+This specifies a name for a subgroup of certificate lineages that are to be
+treated in the same way as each other.
+
+By default, danectl assumes that all certificate lineages have the same key
+type and the same authentication and installation details when it invokes
+certbot(1). In other words, the certbot(1) command line options that are
+specified and saved with danectl's certbot subcommand apply to all
+certificate lineages.
+
+If your requirements are more heterogeneous, with either a different type of
+key needed for different certificate lineages (for different domains or for
+the same domains), or if different certificate lineages require different
+authentication or installation methods, use the --group option to specify
+groups of certificate lineages that are homogeneous within the group.
+
+Each group is identified by the groupname option argument. Note that every
+certificate lineage within a group must have the same key type,
+authentication method, and installation method.
+
+If you need the --group option, it must be used for all subcommands
+pertaining to the certificate lineages within a group. The groupname option
+argument should only contain characters that are suitable for use in a
+filename. The default configuration file for danectl is ~/.danectlrc. When
+the --group option is used, a separate configuration file is used. Its name
+will look like ~/.danectlrc.groupname.
+
+Even when the --group option is used, it is still possible to use danectl
+without the --group option and use the default configuration file for some
+certificate lineages. This can be viewed as an unnamed default group.
+
+Note: If you need multiple key types for the same domain(s), you will need
+to create the second certificate lineage directly with certbot(1) using its
+--duplicate command line option, and then use danectl's adopt subcommand. If
+you try to use danectl's new subcommand instead, certbot(1) will refuse to
+create the new certificate lineage for domains that already have a
+certificate lineage.
+
 -1, --oneline
 
 This causes each long DNS record to be output on a single very long line,
@@ -310,7 +352,8 @@ that isn't always true.
   danectl certbot certonly --nginx
   danectl certbot run --third-party-plugin-details
 
-The "certbot" command modifies your ~/.danectlrc file.
+The "certbot" command modifies your ~/.danectlrc (or ~/.danectlrc.groupname)
+file.
 
 If you already have a certbot certificate lineage, you can adopt it for DANE
 use:
@@ -385,7 +428,8 @@ You can also remove port/protocol/host combinations:
 
   danectl del-tlsa example.org _110._tcp.mail _143._tcp.mail
 
-The "add-tlsa" and "del-tlsa" commands modify your ~/.danectlrc file.
+The "add-tlsa" and "del-tlsa" commands modify your ~/.danectlrc (or
+~/.danectlrc.groupname) file.
 
 You can also show which port/protocol/host combinations will be included
 for TLSA records:
@@ -423,7 +467,8 @@ They can also be removed:
 
   danectl del-reload example.org postfix # Postfix looks after itself
 
-The "add-reload" and "del-reload" commands modify your ~/.danectlrc file.
+The "add-reload" and "del-reload" commands modify your ~/.danectlrc (or
+~/.danectlrc.groupname) file.
 
 You can also show which services will be reloaded when a key rolls over:
 
@@ -513,7 +558,8 @@ FILES
   /etc/letsencrypt/live    - Certbot certificate lineages
   /etc/letsencrypt/current - Current keys/certificates
   /etc/letsencrypt/next    - Next keys/certificates
-  ~/.danectlrc             - Configuration file
+  ~/.danectlrc             - Default configuration file
+  ~/.danectlrc.*           - Group-specific configuration file(s)
 
 The ~/.danectlrc configuration file is technically a shell script.
 But danectl's additions and removals are purely a single name="value"
@@ -1479,6 +1525,14 @@ do
 		-n|--test)
 			verbose=1
 			test=1
+			shift
+			;;
+		-g|--group)
+			[ "$danectlrc" = "$default_danectlrc" ] || die "The --group option may only appear once on the command line"
+			shift
+			[ -z "$1" ] && die "The --group option is missing its groupname argument"
+			case "$1" in */*) die "Invalid --group groupname argument: $1 (must be usable as a filename)";; esac
+			danectlrc="$danectlrc.$1"
 			shift
 			;;
 		-1|--oneline)

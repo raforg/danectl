@@ -463,6 +463,16 @@ To specify the services that need to be reloaded when a key rolls over:
 
   danectl add-reload example.org apache2 postfix dovecot
 
+A service name can be: an absolute path to an executable file; or anything
+recognized as a service name by systemctl(1), service(8), or rcctl(8)
+(depending on the local operating system); or an executable file in
+/etc/init.d, /etc/rc.d, or /usr/local/etc/rc.d. When services are reloaded,
+the $CERTNAME environment variable will contain the relevant certificate
+name. When the service is an absolute path, the executable is invoked with
+"reload" as its first command line argument ($1), and with the certificate
+name as its second argument ($2). Also, the absolute path must not contain
+any whitespace characters.
+
 They can also be removed:
 
   danectl del-reload example.org postfix # Postfix looks after itself
@@ -936,10 +946,12 @@ show_reload()
 reload()
 {
 	certname="$1"
+	CERTNAME="$certname"; export CERTNAME
 	shcertname="`shcertname $certname`"
 	eval reload="\$reload_$shcertname"
 	for service in $reload
 	do
+		case "$service" in /*) if [ -x "$service" ]; then run $service reload "$CERTNAME"; continue; fi;; esac
 		case "`which systemctl 2>/dev/null`" in /*) run systemctl reload "$service"; continue;; esac
 		case "`which service 2>/dev/null`" in /*) run service "$service" reload; continue;; esac
 		case "`which rcctl 2>/dev/null`" in /*) run rcctl reload "$service"; continue;; esac

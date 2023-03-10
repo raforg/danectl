@@ -7,7 +7,7 @@
 *Danectl* is a DNSSEC DANE implementation manager. It uses *certbot* to create
 and manage pairs of keys for use with a TLSA 3 1 1 current + next workflow.
 It generates TLSA records for your TLS services for you to publish in the DNS,
-checks that they are correctly published, and facilitates key rollovers.
+checks that they are correctly published, and performs key rollovers.
 
 *Danectl* can also generate and check SSHFP records for the local *SSH* server.
 
@@ -65,11 +65,11 @@ to be reloaded when the key rolls over.
         danectl add-reload example.org apache2 postfix dovecot
         danectl del-reload example.org postfix
 
-This is needed even when certbot is configured to do it with deploy hooks,
+This is needed even when *certbot* is configured to do it with deploy hooks,
 because those hooks are only run when a certificate is renewed. Service
 reloads also need to happen when there's a DANE key rollover, and that
-doesn't necessarily happen at the same time as automatic certbot certificate
-renewals.
+doesn't necessarily happen at the same time as automatic *certbot*
+certificate renewals.
 
 You then need to configure your TLS services to use the "current"
 certificate in /etc/letsencrypt/current, and then reload them. This is like
@@ -79,7 +79,7 @@ following instructions for using a certbot certificate, but replacing
         Left as an exercise for the reader
 
 Periodically, you can perform key rollovers on a schedule that suits you
-(e.g. annually). An emergency key rollover is exactly the same.
+(e.g., annually). An emergency key rollover is exactly the same.
 
         danectl rollover example.org
 
@@ -122,22 +122,30 @@ To uninstall `danectl`:
 
 # REQUIREMENTS
 
+`Danectl` is written in Bourne shell, and should work on any platform
+that has the following prerequisites.
+
 In all cases, `danectl` requires `/bin/sh` and `host` (or `drill`).
+
+On systems like *Solaris*, `/usr/xpg4/bin/sh` is used instead of `/bin/sh`.
 
 For TLSA usage, `danectl` also requires `ls`, `sed`, `grep`, `readlink`, `certbot`,
 `openssl`, `sha256sum`, and root privileges (for `certbot`).
 
-For SSHFP usage, `danectl` also requires `sed` and `ssh-keygen`.
+For SSHFP usage, `danectl` also requires `sed`, `perl` and `ssh-keygen`.
 
 For OPENPGPKEY usage, `danectl` also requires `perl` and `gpg`.
 
 For SMIMEA usage, `danectl` also requires `perl` and `openssl`.
 
-On systems like *Solaris*, `/usr/xpg4/bin/sh` is used instead of `/bin/sh`.
-
 The `danectl-zonefile` output adapter requires `perl`.
 
 The `danectl-nsupdate` output adapter requires `perl`.
+
+For reloading affected services on key rollover, any system with
+`systemctl`, `service`, `rcctl`, or service scripts in
+`/etc/init.d`, `/etc/rc.d`, or `/usr/local/etc/rc.d` should work
+(e.g., `Linux`, `FreeBSD`, `NetBSD`, `OpenBSD`, `Solaris`).
 
 --------------------------------------------------------------------------------
 

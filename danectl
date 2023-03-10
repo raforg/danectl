@@ -261,9 +261,9 @@ treated in the same way as each other.
 
 By default, danectl assumes that all certificate lineages have the same key
 type and the same authentication and installation details when it invokes
-certbot(1). In other words, the certbot(1) command line options that are
-specified and saved with danectl's certbot subcommand apply to all
-certificate lineages.
+certbot. In other words, the certbot command line options that are specified
+and saved with danectl's "certbot" command apply to all certificate
+lineages.
 
 If your requirements are more heterogeneous, with either a different type of
 key needed for different certificate lineages (for different domains or for
@@ -275,7 +275,7 @@ Each group is identified by the groupname option argument. Note that every
 certificate lineage within a group must have the same key type,
 authentication method, and installation method.
 
-If you need the --group option, it must be used for all subcommands
+If you need the --group option, it must be used for all danectl commands
 pertaining to the certificate lineages within a group. The groupname option
 argument should only contain characters that are suitable for use in a
 filename. The default configuration file for danectl is ~/.danectlrc. When
@@ -287,9 +287,9 @@ without the --group option and use the default configuration file for some
 certificate lineages. This can be viewed as an unnamed default group.
 
 Note: If you need multiple key types for the same domain(s), you will need
-to create the second certificate lineage directly with certbot(1) using its
---duplicate command line option, and then use danectl's adopt subcommand. If
-you try to use danectl's new subcommand instead, certbot(1) will refuse to
+to create the second certificate lineage directly with certbot using its
+--duplicate command line option, and then use danectl's "adopt" command. If
+you try to use danectl's "new" command instead, certbot will refuse to
 create the new certificate lineage for domains that already have a
 certificate lineage.
 
@@ -352,7 +352,7 @@ that isn't always true.
   danectl certbot certonly --nginx
   danectl certbot run --third-party-plugin-details
 
-The "certbot" command modifies your ~/.danectlrc (or ~/.danectlrc.groupname)
+Danectl's "certbot" command modifies your ~/.danectlrc (or ~/.danectlrc.*)
 file.
 
 If you already have a certbot certificate lineage, you can adopt it for DANE
@@ -361,8 +361,8 @@ use:
   danectl adopt example.org
 
 Note that you must use an existing certificate's cert-name, not the list of
-certified domains. To see all of your cert-names, run "certbot
-certificates", or look in /etc/letsencrypt/live.
+certified domains. To see all of your cert-names, run "certbot certificates",
+or look in /etc/letsencrypt/live.
 
 This will create a symlink in /etc/letsencrypt/current to the adopted
 certificate lineage.
@@ -411,8 +411,8 @@ will want TLSA records for:
   danectl add-tlsa example.org _110._tcp.mail _143._tcp.mail
   danectl add-tlsa example.org _993._tcp.mail _995._tcp.mail
 
-Do not include the base cert-name in the port/protocol/host combinations. It
-will be appended automatically when TLSA records are output.
+Do not include the base cert-name in the port/protocol/host combinations.
+It will be appended automatically when TLSA records are output.
 
 But if the certificate lineage certifies multiple base domains, and you need
 to specify a host that is not in the domain indicated by the base cert-name,
@@ -428,8 +428,8 @@ You can also remove port/protocol/host combinations:
 
   danectl del-tlsa example.org _110._tcp.mail _143._tcp.mail
 
-The "add-tlsa" and "del-tlsa" commands modify your ~/.danectlrc (or
-~/.danectlrc.groupname) file.
+The "add-tlsa" and "del-tlsa" commands modify your ~/.danectlrc
+(or ~/.danectlrc.groupname) file.
 
 You can also show which port/protocol/host combinations will be included
 for TLSA records:
@@ -467,10 +467,10 @@ A service name can be: an absolute path to an executable file; or anything
 recognized as a service name by systemctl(1), service(8), or rcctl(8)
 (depending on the local operating system); or an executable file in
 /etc/init.d, /etc/rc.d, or /usr/local/etc/rc.d. When services are reloaded,
-the $CERTNAME environment variable will contain the relevant certificate
+the \$CERTNAME environment variable will contain the relevant certificate
 name. When the service is an absolute path, the executable is invoked with
-"reload" as its first command line argument ($1), and with the certificate
-name as its second argument ($2). Also, the absolute path must not contain
+"reload" as its first command line argument (\$1), and with the certificate
+name as its second argument (\$2). Also, the absolute path must not contain
 any whitespace characters.
 
 They can also be removed:
@@ -652,9 +652,9 @@ For SMIMEA usage, danectl also requires perl and openssl.
 
 On systems like Solaris, /usr/xpg4/bin/sh is used instead of /bin/sh.
 
-The danectl-zonefile(1) output adapter requires perl.
+The danectl-zonefile output adapter requires perl.
 
-The danectl-nsupdate(1) output adapter requires perl.
+The danectl-nsupdate output adapter requires perl.
 
 LICENSE
 

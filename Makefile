@@ -47,7 +47,7 @@ DANECTL_NSUPDATE_HTMLFILE=$(DANECTL_NSUPDATE_NAME).$(APP_MANSECT).html
 
 install: install-bin install-man
 
-dist: clean $(DANECTL_MANFILE)
+dist: clean man
 	@set -e; \
 	up="`pwd`/.."; \
 	src=`basename \`pwd\``; \

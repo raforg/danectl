@@ -1,6 +1,18 @@
 CHANGELOG
 =========
 
+0.8 (20230313)
+
+    - Add references to the codeberg repository
+    - Add LICENSES/* and .reuse/dep5 (REUSE 3.0 compliant)
+    - Add danectl-nsupdate (output adapter for BIND9 dynamic DNS updates)
+    - Add support for drill on systems like Arch that prefer it to host (for Gaspard d'Hautefeuille)
+    - Fix openpgpkey-check superfluous record detection: localpart was hard-coded for testing
+    - Add danectl-zonefile (output adapter for modifying BIND9 zonefiles)
+    - Add --group option for different certbot configurations for different domains (for github/hunter-nl)
+    - Add support for reload to use an explicit path to an executable file (for github/hunter-nl)
+    - Add exporting $CERTNAME environment variable when reloading services (for github/hunter-nl)
+
 0.7.4 (20220725)
 
     - Add support for non-rsa keys (e.g., ecdsa) (github/csarn Christoph Sarnowski)
@@ -130,7 +142,8 @@ CHANGELOG
 
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
-    Date: 20220725
+    GIT: https://codeberg.org/raforg/danectl
+    Date: 20230313
     Author: raf <raf@raf.org>
 
 

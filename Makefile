@@ -1,7 +1,7 @@
 # danectl - DNSSEC DANE implementation manager
 # https://raf.org/danectl
 #
-# Copyright (C) 2021-2022 raf <raf@raf.org>
+# Copyright (C) 2021-2023 raf <raf@raf.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 # along with this program; if not, see <https://www.gnu.org/licenses/>.
 #
 
-# 20220725 raf <raf@raf.org>
+# 20230313 raf <raf@raf.org>
 
 DESTDIR :=
 PREFIX := $(DESTDIR)/usr/local
@@ -30,8 +30,8 @@ APP_MANDIR := $(MAN_INSDIR)/man$(APP_MANSECT)
 APP_MANSECTNAME := User Commands
 
 DANECTL_NAME=danectl
-DANECTL_VERSION=0.7.4
-DANECTL_DATE=20220725
+DANECTL_VERSION=0.8
+DANECTL_DATE=20230313
 DANECTL_ID=$(DANECTL_NAME)-$(DANECTL_VERSION)
 DANECTL_DIST=$(DANECTL_ID).tar.gz
 DANECTL_MANFILE=$(DANECTL_NAME).$(APP_MANSECT)

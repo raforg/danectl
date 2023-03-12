@@ -4,7 +4,7 @@
 # https://github.com/raforg/danectl
 # https://codeberg.org/raforg/danectl
 #
-# Copyright (C) 2021-2022 raf <raf@raf.org>
+# Copyright (C) 2021-2023 raf <raf@raf.org>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,11 +19,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <https://www.gnu.org/licenses/>.
 #
-# 20220725 raf <raf@raf.org>
+# 20230313 raf <raf@raf.org>
 
 name=danectl
-version=0.7.4
-date=20220725
+version=0.8
+date=20230313
 author="raf <raf@raf.org>"
 url=https://raf.org/danectl
 git=https://github.com/raforg/danectl
@@ -107,7 +107,7 @@ URL: $url
 GIT: $git
 GIT: $git2
 
-Copyright (C) 2021-2022 $author
+Copyright (C) 2021-2023 $author
 
 This is free software released under the terms of the GPLv2+:
 

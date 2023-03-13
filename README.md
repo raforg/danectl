@@ -110,7 +110,11 @@ To install `danectl`:
 This will install:
 
         /usr/local/bin/danectl
+        /usr/local/bin/danectl-zonefile
+        /usr/local/bin/danectl-nsupdate
         /usr/local/share/man/man1/danectl.1
+        /usr/local/share/man/man1/danectl-zonefile.1
+        /usr/local/share/man/man1/danectl-nsupdate.1
 
 To install under `/usr` instead:
 

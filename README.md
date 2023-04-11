@@ -142,6 +142,8 @@ For OPENPGPKEY usage, `danectl` also requires `perl` and `gpg`.
 
 For SMIMEA usage, `danectl` also requires `perl` and `openssl`.
 
+For non-ASCII domain names, `danectl` also requires *GNU* `idn2`.
+
 The `danectl-zonefile` output adapter requires `perl`.
 
 The `danectl-nsupdate` output adapter requires `perl`.

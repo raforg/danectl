@@ -639,22 +639,31 @@ into input for the nsupdate(1) dynamic DNS update utility.
 
 REQUIREMENTS
 
+Danectl is written in Bourne shell, and should work on any platform
+that has the following prerequisites.
+
 In all cases, danectl requires /bin/sh and host (or drill).
+
+On systems like Solaris, /usr/xpg4/bin/sh is used instead of /bin/sh.
 
 For TLSA usage, danectl also requires ls, sed, grep, readlink, certbot,
 openssl, sha256sum, and root privileges (for certbot).
 
-For SSHFP usage, danectl also requires sed and ssh-keygen.
+For SSHFP usage, danectl also requires sed, perl and ssh-keygen.
 
 For OPENPGPKEY usage, danectl also requires perl and gpg.
 
 For SMIMEA usage, danectl also requires perl and openssl.
 
-On systems like Solaris, /usr/xpg4/bin/sh is used instead of /bin/sh.
+For non-ASCII domain names, danectl also requires GNU idn2.
 
 The danectl-zonefile output adapter requires perl.
 
 The danectl-nsupdate output adapter requires perl.
+
+For reloading affected services on key rollover, any system with
+systemctl, service, rcctl, or service scripts in
+/etc/init.d, /etc/rc.d, or /usr/local/etc/rc.d should work.
 
 LICENSE
 
@@ -742,7 +751,7 @@ default_certbot_command()
 fetch_dns()
 {
 	dns_type="$1"
-	dns_name="$2"
+	dns_name="`idna $2`"
 
 	if [ $HAVE_HOST = 1 ]
 	then
@@ -834,7 +843,7 @@ tlsa_role()
 	for t in $tlsa
 	do
 		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
-		printf "$prefix$domain\tIN\tTLSA\t3 1 1 $hash\n"
+		printf "$prefix`idna $domain`\tIN\tTLSA\t3 1 1 $hash\n"
 	done
 }
 
@@ -877,7 +886,7 @@ tlsa_check()
 		else
 			[ "$missing" = 0 ] && echo "; Missing $certname current (must be published)"
 			missing=1
-			printf "$domain\tIN\tTLSA\t3 1 1 $hash_current\n"
+			printf "`idna $domain`\tIN\tTLSA\t3 1 1 $hash_current\n"
 		fi
 	done
 	missing=0
@@ -890,7 +899,7 @@ tlsa_check()
 		else
 			[ "$missing" = 0 ] && echo "; Missing $certname next (must be published)"
 			missing=1
-			printf "$domain\tIN\tTLSA\t3 1 1 $hash_next\n"
+			printf "`idna $domain`\tIN\tTLSA\t3 1 1 $hash_next\n"
 		fi
 	done
 	superfluous=0
@@ -1128,12 +1137,26 @@ remove_item()
 	sed 's/ /\n/g' | grep -v "$item"
 }
 
+# Output the ASCII version (IDNA2008/TR46) of a Unicode domain name 
+
+idna()
+{
+	domainname="$1"
+	if echo "$domainname" | LANG=C grep -q '^[a-zA-Z0-9-][a-zA-Z0-9.-]*$'
+	then
+		echo $domainname
+	else
+		case "`which idn2 2>/dev/null`" in /*) ;; *) die "Failed to find idn2";; esac
+		idn2 -l -- "$domainname"
+	fi
+}
+
 # Output a form of certname that is suitable for use in a shell variable identifier
 
 shcertname()
 {
 	certname="$1"
-	echo "$certname" | LANG=C sed 's/[^a-zA-Z0-9]/_/g'
+	idna "$certname" | LANG=C sed 's/[^a-zA-Z0-9]/_/g'
 }
 
 # Check for host or drill
@@ -1237,7 +1260,7 @@ check_sshfp_prerequisites()
 
 sshfp()
 {
-	hostname="$1"
+	hostname="`idna $1`"
 	ssh-keygen -r "$hostname" | sed -e 's/ /.	/' -e 's/ /	/' -e 's/ /	/'
 }
 
@@ -1245,7 +1268,7 @@ sshfp()
 
 sshfp_check()
 {
-	hostname="$1"
+	hostname="`idna $1`"
 	perl -e '
 		use strict;
 		use warnings;
@@ -1299,13 +1322,20 @@ openpgpkey()
 			$encoded =~ s/^ // if '$oneline' == 1 && '$spaces' == 1;
 			return $encoded;
 		}
+		sub idna
+		{
+			my $domain = shift;
+			return $domain if $domain =~ /^[a-zA-Z0-9.-]+$/;
+			chop($domain = `idn2 -l -- $domain`);
+			return $domain;
+		}
 		my $origin;
 		my $prefix;
 		my $comment = "";
 		my $key_hex = "";
 		while (<>)
 		{
-			$origin = $1, next if /^\$ORIGIN (\S+)/;
+			$origin = idna($1), next if /^\$ORIGIN (\S+)/;
 			$comment .= $_, next if /^;/;
 			$prefix = $1, next if /^([0-9a-f]+) TYPE61 \\# \d+ \($/;
 			$key_hex .= $1, next if /^\s+([0-9a-f]+)$/;
@@ -1343,13 +1373,20 @@ openpgpkey_check()
 			$encoded =~ s/^ // if '$oneline' == 1 && '$spaces' == 1;
 			return $encoded;
 		}
+		sub idna
+		{
+			my $domain = shift;
+			return $domain if $domain =~ /^[a-zA-Z0-9.-]+$/;
+			chop($domain = `idn2 -l -- $domain`);
+			return $domain;
+		}
 		my $origin;
 		my $prefix;
 		my $comment = "";
 		my $key_hex = "";
 		while (<>)
 		{
-			$origin = $1, next if /^\$ORIGIN (\S+)/;
+			$origin = idna($1), next if /^\$ORIGIN (\S+)/;
 			$comment .= $_, next if /^;/;
 			$prefix = $1, next if /^([0-9a-f]+) TYPE61 \\# \d+ \($/;
 			$key_hex .= $1, next if /^\s+([0-9a-f]+)$/;
@@ -1366,7 +1403,7 @@ openpgpkey_check()
 			my $hash = Digest->new("SHA-256");
 			$hash->add($localpart);
 			$prefix = substr($hash->hexdigest(), 0, 28 * 2);
-			$origin = "_openpgpkey.$domain";
+			$origin = "_openpgpkey." . idna($domain);
 		}
 		# Is it published? Are any other keys published?
 		my $missing = $key_exists;
@@ -1426,6 +1463,13 @@ smimea()
 		use Digest;
 		binmode(STDIN);
 		$/ = undef;
+		sub idna
+		{
+			my $domain = shift;
+			return $domain if $domain =~ /^[a-zA-Z0-9.-]+$/;
+			chop($domain = `idn2 -l -- $domain`);
+			return $domain;
+		}
 		my $cert = unpack("H*", <STDIN>);
 		$cert =~ s/(.{1,56})/\t$1\n/g if '$oneline' == 0;
 		$cert =~ s/^\t// if '$oneline' == 0;
@@ -1437,7 +1481,7 @@ smimea()
 		my $hash = Digest->new("SHA-256");
 		$hash->add($localpart);
 		my $prefix = substr($hash->hexdigest(), 0, 28 * 2);
-		my $origin = "_smimecert.$domain.";
+		my $origin = "_smimecert." . idna($domain) . ".";
 		print("; $email\n");
 		my $start = ('$oneline' == 0) ? "(\n\t" : "";
 		my $middle = ('$oneline' == 0) ? "\n\t" : " ";
@@ -1468,6 +1512,13 @@ smimea_check()
 		use Digest;
 		binmode(STDIN);
 		$/ = undef;
+		sub idna
+		{
+			my $domain = shift;
+			return $domain if $domain =~ /^[a-zA-Z0-9.-]+$/;
+			chop($domain = `idn2 -l -- $domain`);
+			return $domain;
+		}
 		my $cert = unpack("H*", <STDIN>);
 		$cert =~ s/(.{1,56})/\t$1\n/g if '$oneline' == 0;
 		$cert =~ s/^\t// if '$oneline' == 0;
@@ -1480,7 +1531,7 @@ smimea_check()
 		$hash->add($localpart);
 		my $comment = "; $email\n";
 		my $prefix = substr($hash->hexdigest(), 0, 28 * 2);
-		my $origin = "_smimecert.$domain.";
+		my $origin = "_smimecert." . idna($domain) . ".";
 		my $missing = 1;
 		my $superfluous = "";
 		my $start = ('$oneline' == 0) ? "(\n\t" : "";

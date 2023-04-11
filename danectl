@@ -1133,7 +1133,7 @@ remove_item()
 shcertname()
 {
 	certname="$1"
-	echo "$certname" | sed 's/\./_/g'
+	echo "$certname" | LANG=C sed 's/[^a-zA-Z0-9]/_/g'
 }
 
 # Check for host or drill

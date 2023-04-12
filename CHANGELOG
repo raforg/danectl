@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+0.8.1 (20230412)
+
+    - README.md - Add danectl-zonefile and danectl-nsupdate to the list of things installed
+    - Fix handling of domains with - (with github/thomas-mm)
+    - Add support for Unicode domain names (IDNA2008/TR46)
+
 0.8 (20230313)
 
     - Add references to the codeberg repository
@@ -143,7 +149,7 @@ CHANGELOG
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
     GIT: https://codeberg.org/raforg/danectl
-    Date: 20230313
+    Date: 20230412
     Author: raf <raf@raf.org>
 
 

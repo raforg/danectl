@@ -1453,8 +1453,10 @@ smimea()
 		use warnings;
 		while (<>)
 		{
-			print("$1\n") if /emailAddress = (\S+)/;
+			print("$1\n"), last if /emailAddress\s*=\s*(\S+)/;
+			print("$1\n"), last if /SmtpUTF8Mailbox\s*:[^:]*:\s*(\S+)/;
 		}
+		while (<>) {}
 	'`"
 	[ -z "$email" ] && die "Failed to find an email address in the certificate"
 	openssl x509 -inform pem -in "$cert" -outform der | perl -e '
@@ -1502,8 +1504,10 @@ smimea_check()
 		use warnings;
 		while (<>)
 		{
-			print("$1\n") if /emailAddress = (\S+)/;
+			print("$1\n"), last if /emailAddress = (\S+)/;
+			print("$1\n"), last if /SmtpUTF8Mailbox\s*:[^:]*:\s*(\S+)/;
 		}
+		while (<>) {}
 	'`"
 	[ -z "$email" ] && die "Failed to find an email address in the certificate"
 	openssl x509 -inform pem -in "$cert" -outform der | perl -e '

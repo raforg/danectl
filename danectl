@@ -19,11 +19,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <https://www.gnu.org/licenses/>.
 #
-# 20230412 raf <raf@raf.org>
+# 20230414 raf <raf@raf.org>
 
 name=danectl
-version=0.8.1
-date=20230412
+version=0.8.2
+date=20230414
 author="raf <raf@raf.org>"
 url=https://raf.org/danectl
 git=https://github.com/raforg/danectl

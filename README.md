@@ -103,8 +103,8 @@ SMIMEA records, and check that they are published in the DNS.
 
 To install `danectl`:
 
-        tar xzf danectl-0.8.1.tar.gz
-        cd danectl-0.8.1
+        tar xzf danectl-0.8.2.tar.gz
+        cd danectl-0.8.2
         make install
 
 This will install:
@@ -158,6 +158,6 @@ For reloading affected services on key rollover, any system with
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
     GIT: https://codeberg.org/raforg/danectl
-    Date: 20230412
+    Date: 20230414
     Author: raf <raf@raf.org>
 

@@ -1454,7 +1454,9 @@ smimea()
 		while (<>)
 		{
 			print("$1\n"), last if /emailAddress\s*=\s*(\S+)/;
+			print("$1\n"), last if /email\s*:\s*(\S+)/;
 			print("$1\n"), last if /SmtpUTF8Mailbox\s*:[^:]*:\s*(\S+)/;
+			print("$1\n"), last if /CN\s*=\s*(\S+@\S+)$/;
 		}
 		while (<>) {}
 	'`"
@@ -1504,8 +1506,10 @@ smimea_check()
 		use warnings;
 		while (<>)
 		{
-			print("$1\n"), last if /emailAddress = (\S+)/;
+			print("$1\n"), last if /emailAddress\s*=\s*(\S+)/;
+			print("$1\n"), last if /email\s*:\s*(\S+)/;
 			print("$1\n"), last if /SmtpUTF8Mailbox\s*:[^:]*:\s*(\S+)/;
+			print("$1\n"), last if /CN\s*=\s*(\S+@\S+)$/;
 		}
 		while (<>) {}
 	'`"

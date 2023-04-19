@@ -1,6 +1,10 @@
 CHANGELOG
 =========
 
+0.8.3 (20230419)
+
+    - smimea/smimea-check: Improve email address identification (spotted by John Scott)
+
 0.8.2 (20230414)
 
     - Fix support for Unicode email addresses in S/MIME certificates
@@ -153,7 +157,7 @@ CHANGELOG
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
     GIT: https://codeberg.org/raforg/danectl
-    Date: 20230414
+    Date: 20230419
     Author: raf <raf@raf.org>
 
 

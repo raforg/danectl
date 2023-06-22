@@ -2,6 +2,18 @@
 
 *danectl* - DNSSEC DANE implementation manager
 
+# WHAT IS DANE?
+
+*DANE* is *DNS-based Authentication of Named Entities*. It means securely
+letting the world know in advance what your public encryption keys are by
+publishing them as DNS records (TLSA SSHFP OPENPGPKEY SMIMEA) in your
+DNSSEC-enabled internet domain zone. This is the simplest and most secure
+way to let the world know what keys to expect when connecting to your
+servers. This can apply to TLS keys, SSH host keys, and OpenPGP and S/MIME
+keys. This makes it possible to prevent impersonation or man-in-the-middle
+attacks. It's mostly used with mail servers. Eventually, it could render
+certificate authorities unnecessary. DNSSEC has become very easy these days.
+
 # INTRODUCTION
 
 *Danectl* is a DNSSEC DANE implementation manager. It uses *certbot* to create

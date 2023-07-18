@@ -778,6 +778,7 @@ fetch_dns()
 {
 	dns_type="$1"
 	dns_name="`idna $2`"
+	idna_check "$dns_name"
 
 	if [ $HAVE_HOST = 1 ]
 	then
@@ -825,6 +826,7 @@ add_tlsa()
 {
 	certname="$1"; shift
 	shcertname="`shcertname $certname`"
+	idna_check "$shcertname"
 	eval tlsa="\$tlsa_$shcertname"
 	set_rc tlsa_"$shcertname" "$tlsa $@"
 }
@@ -835,6 +837,7 @@ del_tlsa()
 {
 	certname="$1"; shift
 	shcertname="`shcertname $certname`"
+	idna_check "$shcertname"
 	eval tlsa="\$tlsa_$shcertname"
 	for t in "$@"
 	do
@@ -849,6 +852,7 @@ show_tlsa()
 {
 	certname="$1"; shift
 	shcertname="`shcertname $certname`"
+	idna_check "$shcertname"
 	eval tlsa="\$tlsa_$shcertname"
 	echo "$tlsa"
 }
@@ -862,6 +866,7 @@ tlsa_role()
 	label="$3"
 	prefix="$4"
 	shcertname="`shcertname $certname`"
+	idna_check "$shcertname"
 	eval tlsa="\$tlsa_$shcertname"
 	[ -z "$tlsa" ] && die "No TLSA records have been configured yet for $certname"
 	hash="`tlsa_hash $role $certname`"
@@ -869,7 +874,9 @@ tlsa_role()
 	for t in $tlsa
 	do
 		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
-		printf "$prefix`idna $domain`\tIN\tTLSA\t3 1 1 $hash\n"
+		idna_domain="`idna $domain`"
+		idna_check "$idna_domain"
+		printf "$prefix$idna_domain\tIN\tTLSA\t3 1 1 $hash\n"
 	done
 }
 
@@ -898,6 +905,7 @@ tlsa_check()
 {
 	certname="$1"
 	shcertname="`shcertname $certname`"
+	idna_check "$shcertname"
 	eval tlsa="\$tlsa_$shcertname"
 	[ -z "$tlsa" ] && die "No TLSA records have been configured yet for $certname"
 	hash_current="`tlsa_hash current $certname`"
@@ -912,7 +920,9 @@ tlsa_check()
 		else
 			[ "$missing" = 0 ] && echo "; Missing $certname current (must be published)"
 			missing=1
-			printf "`idna $domain`\tIN\tTLSA\t3 1 1 $hash_current\n"
+			idna_domain="`idna $domain`"
+			idna_check "$idna_domain"
+			printf "$idna_domain\tIN\tTLSA\t3 1 1 $hash_current\n"
 		fi
 	done
 	missing=0
@@ -925,7 +935,9 @@ tlsa_check()
 		else
 			[ "$missing" = 0 ] && echo "; Missing $certname next (must be published)"
 			missing=1
-			printf "`idna $domain`\tIN\tTLSA\t3 1 1 $hash_next\n"
+			idna_domain="`idna $domain`"
+			idna_check "$idna_domain"
+			printf "$idna_domain\tIN\tTLSA\t3 1 1 $hash_next\n"
 		fi
 	done
 	superfluous=0
@@ -948,6 +960,7 @@ add_reload()
 {
 	certname="$1"; shift
 	shcertname="`shcertname $certname`"
+	idna_check "$shcertname"
 	eval reload="\$reload_$shcertname"
 	set_rc reload_"$shcertname" "$reload $@"
 }
@@ -958,6 +971,7 @@ del_reload()
 {
 	certname="$1"; shift
 	shcertname="`shcertname $certname`"
+	idna_check "$shcertname"
 	eval reload="\$reload_$shcertname"
 	for t in "$@"
 	do
@@ -972,6 +986,7 @@ show_reload()
 {
 	certname="$1"; shift
 	shcertname="`shcertname $certname`"
+	idna_check "$shcertname"
 	eval reload="\$reload_$shcertname"
 	echo "$reload"
 }
@@ -983,6 +998,7 @@ reload()
 	certname="$1"
 	CERTNAME="$certname"; export CERTNAME
 	shcertname="`shcertname $certname`"
+	idna_check "$shcertname"
 	eval reload="\$reload_$shcertname"
 	for service in $reload
 	do
@@ -1178,12 +1194,25 @@ idna()
 	fi
 }
 
+# Terminate if $1 is empty. Used to check the output of `idna` in a subprocess.
+# If idn2 was required but not available, this terminates danectl the first
+# time its absence is noticed. idna() itself emits the error message.
+# This lazy requirements check means that idn2 is only required when there
+# are actually non-ASCII domains in use.
+
+idna_check()
+{
+	[ "x$1" = x ] && exit 1
+}
+
 # Output a form of certname that is suitable for use in a shell variable identifier
 
 shcertname()
 {
 	certname="$1"
-	idna "$certname" | LANG=C sed 's/[^a-zA-Z0-9]/_/g'
+	idna_certname="`idna $certname`"
+	idna_check "$idna_certname"
+	echo "$idna_certname" | LANG=C sed 's/[^a-zA-Z0-9]/_/g'
 }
 
 # Check for host or drill
@@ -1288,6 +1317,7 @@ check_sshfp_prerequisites()
 sshfp()
 {
 	hostname="`idna $1`"
+	idna_check "$hostname"
 	ssh-keygen -r "$hostname" | sed -e 's/ /.	/' -e 's/ /	/' -e 's/ /	/'
 }
 
@@ -1296,6 +1326,7 @@ sshfp()
 sshfp_check()
 {
 	hostname="`idna $1`"
+	idna_check "$hostname"
 	perl -e '
 		use strict;
 		use warnings;
@@ -1354,6 +1385,7 @@ openpgpkey()
 			my $domain = shift;
 			return $domain if $domain =~ /^[a-zA-Z0-9.-]+$/;
 			chop($domain = `idn2 -l -- $domain`);
+			die "'$name': Failed to find idn2\n" unless length $domain;
 			return $domain;
 		}
 		my $origin;
@@ -1405,6 +1437,7 @@ openpgpkey_check()
 			my $domain = shift;
 			return $domain if $domain =~ /^[a-zA-Z0-9.-]+$/;
 			chop($domain = `idn2 -l -- $domain`);
+			die "'$name': Failed to find idn2\n" unless length $domain;
 			return $domain;
 		}
 		my $origin;
@@ -1499,6 +1532,7 @@ smimea()
 			my $domain = shift;
 			return $domain if $domain =~ /^[a-zA-Z0-9.-]+$/;
 			chop($domain = `idn2 -l -- $domain`);
+			die "'$name': Failed to find idn2\n" unless length $domain;
 			return $domain;
 		}
 		my $cert = unpack("H*", <STDIN>);
@@ -1552,6 +1586,7 @@ smimea_check()
 			my $domain = shift;
 			return $domain if $domain =~ /^[a-zA-Z0-9.-]+$/;
 			chop($domain = `idn2 -l -- $domain`);
+			die "'$name': Failed to find idn2\n" unless length $domain;
 			return $domain;
 		}
 		my $cert = unpack("H*", <STDIN>);

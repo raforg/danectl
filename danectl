@@ -1154,7 +1154,7 @@ remove_item()
 idna()
 {
 	domainname="$1"
-	if echo "$domainname" | LANG=C grep -q '^[a-zA-Z0-9-][a-zA-Z0-9.-]*$'
+	if echo "$domainname" | LANG=C grep -q '^[_a-zA-Z0-9-][_a-zA-Z0-9.-]*$'
 	then
 		echo $domainname
 	else

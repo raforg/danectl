@@ -1,6 +1,15 @@
 CHANGELOG
 =========
 
+0.8.4 (20230718)
+
+    - doc - Add WHAT IS DANE? section
+    - Add _ to set of DNS name chars that don't require idn2
+    - rollover - Divert certbot stdout to stderr to aid output adapters
+    - Prevent premature rollover (refuse if tlsa-check would fail)
+    - Terminate danectl when `idna` in subprocess requires idn2 but fails to find it
+    - Makefile - Add make help (default)
+
 0.8.3 (20230419)
 
     - smimea/smimea-check: Improve email address identification (spotted by John Scott)
@@ -157,7 +166,7 @@ CHANGELOG
     URL: https://raf.org/danectl
     GIT: https://github.com/raforg/danectl
     GIT: https://codeberg.org/raforg/danectl
-    Date: 20230419
+    Date: 20230718
     Author: raf <raf@raf.org>
 
 

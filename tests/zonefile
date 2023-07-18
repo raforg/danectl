@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, see <https://www.gnu.org/licenses/>.
 #
-# 20230419 raf <raf@raf.org>
+# 20230718 raf <raf@raf.org>
 
 # Test 1 replaces old "manual" records with new ones
 # Test 2 appends new records only (no old records)

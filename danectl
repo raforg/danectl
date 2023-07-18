@@ -514,6 +514,20 @@ key. It also outputs the old TLSA records for the old current key that you
 need to remove from the DNS (somehow). And it outputs the new TLSA records
 for the new next key that you need to publish in the DNS (somehow).
 
+Note that the rollover command will refuse to proceed if the tlsa-check
+command would report any problems. This is to prevent attempts to perform a
+rapid series of rollovers before the necessary TLSA records for the next key
+have been published in the DNS. But since tlsa-check only checks with the
+local DNS resolver, this precaution doesn't completely guarantee that all
+DNS resolvers everywhere that have cached your TLSA records will have the
+necessary TLSA records for the next key. The solution is to be aware of your
+zone TTLs and not rollover too often. For example, if the zone TTL is one
+hour, then don't rollover until at least two hours after the TLSA records
+for the most recent rollover have been published in the DNS. But if you need
+to absolutely guarantee that you can never rollover prematurely, then
+consider using danebot(1) instead. It takes a user-specified TTL into
+account.
+
 At any time, you can show the status of all certificate pairs:
 
   danectl status
@@ -685,8 +699,8 @@ https://www.gnu.org/licenses.
 SEE ALSO
 
 certbot(1), ssh(1), ssh_config(5), gpg(1), openssl(1), danectl-zonefile(1),
-named(8), danectl-nsupdate(1), nsupdate(1), RFC6698, RFC7671, RFC7672,
-RFC4255, RFC7929, RFC8162.
+named(8), danectl-nsupdate(1), nsupdate(1), danebot(1), RFC6698, RFC7671,
+RFC7672, RFC4255, RFC7929, RFC8162.
 
 AUTHOR
 
@@ -990,6 +1004,7 @@ rollover()
 	certname="$1"
 	[ ! -d "$le/current/$certname" ] && die "rollover $certname: Failed to find current $certname"
 	[ ! -d "$le/next/$certname" ] && die "rollover $certname: Failed to find next $certname"
+	[ -n "`tlsa_check $certname`" ] && die "rollover $certname: Refusing because tlsa-check fails: See: danectl check $certname"
 	# Identify the transition: original to duplicate, or duplicate to original
 	if readlink "$le/current/$certname" | grep -q ".-duplicate"
 	then

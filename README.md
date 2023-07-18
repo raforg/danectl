@@ -136,6 +136,8 @@ To uninstall `danectl`:
 
         make uninstall
 
+See `make help` for more details.
+
 # REQUIREMENTS
 
 `Danectl` is written in Bourne shell, and should work on any platform

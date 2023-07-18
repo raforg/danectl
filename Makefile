@@ -45,19 +45,24 @@ DANECTL_NSUPDATE_NAME=danectl-nsupdate
 DANECTL_NSUPDATE_MANFILE=$(DANECTL_NSUPDATE_NAME).$(APP_MANSECT)
 DANECTL_NSUPDATE_HTMLFILE=$(DANECTL_NSUPDATE_NAME).$(APP_MANSECT).html
 
-install: install-bin install-man
+help:
+	@echo "This Makefile supports the following targets:"; \
+	echo; \
+	echo "  help          - Show this list of targets (default)"; \
+	echo "  install       - install-bin + install-man"; \
+	echo "  install-bin   - Install danectl, danectl-zonefile, and danectl-nsupdate"; \
+	echo "  install-man   - Install the danectl(1) manual entry"; \
+	echo "  uninstall     - uninstall-bin + uninstall-man"; \
+	echo "  uninstall-bin - Uninstall danectl, danectl-zonefile, and danectl-nsupdate"; \
+	echo "  uninstall-man - Uninstall the danectl(1) manual entry"; \
+	echo "  man           - Generate the manual entries using pod2man"; \
+	echo "  html          - Generate HTML versions of the manual entries using pod2html"; \
+	echo "  clean         - Delete any generated manual entries"; \
+	echo "  test          - Run the tests"; \
+	echo "  dist          - Create the distribution tarball"; \
+	echo
 
-dist: clean man
-	@set -e; \
-	up="`pwd`/.."; \
-	src=`basename \`pwd\``; \
-	dst=$(DANECTL_ID); \
-	cd ..; \
-	[ "$$src" != "$$dst" -a ! -d "$$dst" ] && ln -s $$src $$dst; \
-	tar chzf $$up/$(DANECTL_DIST) --exclude='.git*' $$dst; \
-	[ -h "$$dst" ] && rm -f $$dst; \
-	tar tzfv $$up/$(DANECTL_DIST); \
-	ls -l $$up/$(DANECTL_DIST)
+install: install-bin install-man
 
 install-bin:
 	mkdir -p $(APP_INSDIR)
@@ -105,5 +110,17 @@ clean:
 
 test:
 	./runtests
+
+dist: clean man
+	@set -e; \
+	up="`pwd`/.."; \
+	src=`basename \`pwd\``; \
+	dst=$(DANECTL_ID); \
+	cd ..; \
+	[ "$$src" != "$$dst" -a ! -d "$$dst" ] && ln -s $$src $$dst; \
+	tar chzf $$up/$(DANECTL_DIST) --exclude='.git*' $$dst; \
+	[ -h "$$dst" ] && rm -f $$dst; \
+	tar tzfv $$up/$(DANECTL_DIST); \
+	ls -l $$up/$(DANECTL_DIST)
 
 # vi:set ts=4 sw=4:

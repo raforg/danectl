@@ -715,8 +715,8 @@ URL
 HELP
 }
 
-die() { echo "$name: $@" >&2; exit 1; }
-warn() { echo "$name: $@" >&2; }
+die() { echo "$name: $*" >&2; exit 1; }
+warn() { echo "$name: $*" >&2; }
 
 # Record certbot auth/install details
 
@@ -737,7 +737,8 @@ adopt()
 	certname="$*"
 	fname="$le/renewal/$certname.conf"
 	[ -f "$fname" ] || die "adopt $certname: Failed to find renewal config file $fname"
-	[ -e "$le/current/$certname" -o -e "$le/next/$certname" ] && die "adopt $certname: Already adopted"
+	[ -e "$le/current/$certname" ] && die "adopt $certname: Already adopted"
+	[ -e "$le/next/$certname" ] && die "adopt $certname: Already adopted"
 	grep -q reuse_key "$fname" && del_line "$fname" reuse_key
 	add_line "$fname" "reuse_key = True"
 	run ln -s "$le/live/$certname" "$le/current/$certname"
@@ -762,7 +763,7 @@ default_certbot_plugin()
 
 default_certbot_command()
 {
-	case "${certbot_options:-`default_certbot_plugin`}" in
+	case "${certbot_options:-$(default_certbot_plugin)}" in
 		*--apache*|*--nginx*)
 			echo run
 			;;
@@ -777,10 +778,10 @@ default_certbot_command()
 fetch_dns()
 {
 	dns_type="$1"
-	dns_name="`idna $2`"
+	dns_name="$(idna "$2")"
 	idna_check "$dns_name"
 
-	if [ $HAVE_HOST = 1 ]
+	if [ "$HAVE_HOST" = 1 ]
 	then
 		host -t "$dns_type" "$dns_name"
 	else
@@ -794,12 +795,13 @@ new()
 {
 	certname="$1"
 	domains="$*"
-	certname="`echo $certname | sed 's/ .*$//'`"
-	domains="`echo $domains | sed 's/ /,/g'`"
+	certname="$(echo "$certname" | sed 's/ .*$//')"
+	domains="$(echo "$domains" | sed 's/ /,/g')"
 	[ -d "$le/live/$certname" ] && die "new $certname: Already exists"
-	run certbot "${certbot_command:-`default_certbot_command`}"$quiet ${certbot_options:-`default_certbot_plugin`} --reuse-key -d "$domains"
-	[ $test = 0 -a $? != 0 ] && die "new $certname: certbot failed"
-	[ $test = 0 -a ! -d "$le/live/$certname" ] && die "new $certname: certbot failed"
+	run certbot "${certbot_command:-$(default_certbot_command)}""$quiet" "${certbot_options:-$(default_certbot_plugin)}" --reuse-key -d "$domains"
+	certbot_new_rc=$?
+	[ $test = 0 ] && [ $certbot_new_rc != 0 ] && die "new $certname: certbot failed"
+	[ $test = 0 ] && [ ! -d "$le/live/$certname" ] && die "new $certname: certbot failed"
 	run ln -s "$le/live/$certname" "$le/current/$certname"
 }
 
@@ -809,14 +811,15 @@ dup()
 {
 	certname="$1"
 	domains="$*"
-	certname="`echo $certname | sed 's/ .*$//'`"
-	domains="`echo $domains | sed 's/ /,/g'`"
+	certname="$(echo "$certname" | sed 's/ .*$//')"
+	domains="$(echo "$domains" | sed 's/ /,/g')"
 	[ ! -d "$le/live/$certname" ] && die "dup $certname: Failed to find live original $certname"
 	[ ! -d "$le/current/$certname" ] && die "dup $certname: Failed to find current original $certname"
 	[ -d "$le/live/$certname-duplicate" ] && die "dup $certname: Duplicate $certname-duplicate already exists"
-	run certbot certonly$quiet ${certbot_options:-`default_certbot_plugin`} --duplicate --reuse-key --cert-name "$certname-duplicate" -d "$domains"
-	[ $test = 0 -a $? != 0 ] && die "dup $certname: certbot failed"
-	[ $test = 0 -a ! -d "$le/live/$certname-duplicate" ] && die "dup $certname: certbot failed"
+	run certbot certonly"$quiet" "${certbot_options:-$(default_certbot_plugin)}" --duplicate --reuse-key --cert-name "$certname-duplicate" -d "$domains"
+	certbot_dup_rc=$?
+	[ $test = 0 ] && [ $certbot_dup_rc != 0 ] && die "dup $certname: certbot failed"
+	[ $test = 0 ] && [ ! -d "$le/live/$certname-duplicate" ] && die "dup $certname: certbot failed"
 	run ln -s "$le/live/$certname-duplicate" "$le/next/$certname"
 }
 
@@ -825,10 +828,10 @@ dup()
 add_tlsa()
 {
 	certname="$1"; shift
-	shcertname="`shcertname $certname`"
+	shcertname="$(shcertname "$certname")"
 	idna_check "$shcertname"
 	eval tlsa="\$tlsa_$shcertname"
-	set_rc tlsa_"$shcertname" "$tlsa $@"
+	set_rc tlsa_"$shcertname" "$tlsa $*"
 }
 
 # Delete port/pro/host for TLSA output
@@ -836,12 +839,12 @@ add_tlsa()
 del_tlsa()
 {
 	certname="$1"; shift
-	shcertname="`shcertname $certname`"
+	shcertname="$(shcertname "$certname")"
 	idna_check "$shcertname"
 	eval tlsa="\$tlsa_$shcertname"
 	for t in "$@"
 	do
-		tlsa="`echo $tlsa | remove_item \"$t\"`"
+		tlsa="$(echo "$tlsa" | remove_item "$t")"
 	done
 	set_rc tlsa_"$shcertname" "$tlsa"
 }
@@ -851,7 +854,7 @@ del_tlsa()
 show_tlsa()
 {
 	certname="$1"; shift
-	shcertname="`shcertname $certname`"
+	shcertname="$(shcertname "$certname")"
 	idna_check "$shcertname"
 	eval tlsa="\$tlsa_$shcertname"
 	echo "$tlsa"
@@ -865,18 +868,18 @@ tlsa_role()
 	certname="$2"
 	label="$3"
 	prefix="$4"
-	shcertname="`shcertname $certname`"
+	shcertname="$(shcertname "$certname")"
 	idna_check "$shcertname"
 	eval tlsa="\$tlsa_$shcertname"
 	[ -z "$tlsa" ] && die "No TLSA records have been configured yet for $certname"
-	hash="`tlsa_hash $role $certname`"
+	hash="$(tlsa_hash "$role" "$certname")"
 	echo "$prefix; $certname $label"
 	for t in $tlsa
 	do
-		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
-		idna_domain="`idna $domain`"
+		domain="$(case "$t" in *.) echo "$t";; *) echo "$t.$certname.";; esac)"
+		idna_domain="$(idna "$domain")"
 		idna_check "$idna_domain"
-		printf "$prefix$idna_domain\tIN\tTLSA\t3 1 1 $hash\n"
+		printf "%s%s\tIN\tTLSA\t3 1 1 %s\n" "$prefix" "$idna_domain" "$hash"
 	done
 }
 
@@ -904,47 +907,47 @@ tlsa_next()
 tlsa_check()
 {
 	certname="$1"
-	shcertname="`shcertname $certname`"
+	shcertname="$(shcertname "$certname")"
 	idna_check "$shcertname"
 	eval tlsa="\$tlsa_$shcertname"
 	[ -z "$tlsa" ] && die "No TLSA records have been configured yet for $certname"
-	hash_current="`tlsa_hash current $certname`"
-	hash_next="`tlsa_hash next $certname`"
+	hash_current="$(tlsa_hash current "$certname")"
+	hash_next="$(tlsa_hash next "$certname")"
 	missing=0
 	for t in $tlsa
 	do
-		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
+		domain="$(case "$t" in *.) echo "$t";; *) echo "$t.$certname.";; esac)"
 		if fetch_dns tlsa "$domain" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_current"
 		then
 			:
 		else
 			[ "$missing" = 0 ] && echo "; Missing $certname current (must be published)"
 			missing=1
-			idna_domain="`idna $domain`"
+			idna_domain="$(idna "$domain")"
 			idna_check "$idna_domain"
-			printf "$idna_domain\tIN\tTLSA\t3 1 1 $hash_current\n"
+			printf "%s\tIN\tTLSA\t3 1 1 %s\n" "$idna_domain" "$hash_current"
 		fi
 	done
 	missing=0
 	for t in $tlsa
 	do
-		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
+		domain="$(case "$t" in *.) echo "$t";; *) echo "$t.$certname.";; esac)"
 		if fetch_dns tlsa "$domain" | sed 's/ \([a-fA-F0-9][a-fA-F0-9]*\)$/\1/' | grep -iq "$hash_next"
 		then
 			:
 		else
 			[ "$missing" = 0 ] && echo "; Missing $certname next (must be published)"
 			missing=1
-			idna_domain="`idna $domain`"
+			idna_domain="$(idna "$domain")"
 			idna_check "$idna_domain"
-			printf "$idna_domain\tIN\tTLSA\t3 1 1 $hash_next\n"
+			printf "%s\tIN\tTLSA\t3 1 1 %s\n" "$idna_domain" "$hash_next"
 		fi
 	done
 	superfluous=0
 	for t in $tlsa
 	do
-		domain="`case \"$t\" in *.) echo $t;; *) echo $t.$certname.;; esac`"
-		extra="`fetch_dns tlsa \"$domain\" | grep TLSA | sed -e 's/^/;/' -e 's/ has /.	/' -e 's/ record /	/' -e 'y/ABCDEF/abcdef/' -e 's/TLSa/TLSA/' -e 's/ \([a-f0-9][a-f0-9]*\)$/\1/' | grep -v \"$hash_current\" | grep -v \"$hash_next\"`"
+		domain="$(case "$t" in *.) echo "$t";; *) echo "$t.$certname.";; esac)"
+		extra="$(fetch_dns tlsa "$domain" | grep TLSA | sed -e 's/^/;/' -e 's/ has /.	/' -e 's/ record /	/' -e 'y/ABCDEF/abcdef/' -e 's/TLSa/TLSA/' -e 's/ \([a-f0-9][a-f0-9]*\)$/\1/' | grep -v "$hash_current" | grep -v "$hash_next")"
 		if [ -n "$extra" ]
 		then
 			[ "$superfluous" = 0 ] && echo ";; Superfluous $certname (should be removed)"
@@ -959,10 +962,10 @@ tlsa_check()
 add_reload()
 {
 	certname="$1"; shift
-	shcertname="`shcertname $certname`"
+	shcertname="$(shcertname "$certname")"
 	idna_check "$shcertname"
 	eval reload="\$reload_$shcertname"
-	set_rc reload_"$shcertname" "$reload $@"
+	set_rc reload_"$shcertname" "$reload $*"
 }
 
 # Delete services to reload on rollover
@@ -970,12 +973,12 @@ add_reload()
 del_reload()
 {
 	certname="$1"; shift
-	shcertname="`shcertname $certname`"
+	shcertname="$(shcertname "$certname")"
 	idna_check "$shcertname"
 	eval reload="\$reload_$shcertname"
 	for t in "$@"
 	do
-		reload="`echo $reload | remove_item \"$t\"`"
+		reload="$(echo "$reload" | remove_item "$t")"
 	done
 	set_rc reload_"$shcertname" "$reload"
 }
@@ -985,7 +988,7 @@ del_reload()
 show_reload()
 {
 	certname="$1"; shift
-	shcertname="`shcertname $certname`"
+	shcertname="$(shcertname "$certname")"
 	idna_check "$shcertname"
 	eval reload="\$reload_$shcertname"
 	echo "$reload"
@@ -997,15 +1000,15 @@ reload()
 {
 	certname="$1"
 	CERTNAME="$certname"; export CERTNAME
-	shcertname="`shcertname $certname`"
+	shcertname="$(shcertname "$certname")"
 	idna_check "$shcertname"
 	eval reload="\$reload_$shcertname"
 	for service in $reload
 	do
 		case "$service" in /*) if [ -x "$service" ]; then run $service reload "$CERTNAME"; continue; fi;; esac
-		case "`which systemctl 2>/dev/null`" in /*) run systemctl reload "$service"; continue;; esac
-		case "`which service 2>/dev/null`" in /*) run service "$service" reload; continue;; esac
-		case "`which rcctl 2>/dev/null`" in /*) run rcctl reload "$service"; continue;; esac
+		case "$(command -v systemctl)" in /*) run systemctl reload "$service"; continue;; esac
+		case "$(command -v service)" in /*) run service "$service" reload; continue;; esac
+		case "$(command -v rcctl)" in /*) run rcctl reload "$service"; continue;; esac
 		if [ -x /etc/init.d/"$service" ]; then run /etc/init.d/"$service" reload; continue; fi
 		if [ -x /etc/rc.d/"$service" ]; then run /etc/rc.d/"$service" reload; continue; fi
 		if [ -x /usr/local/etc/rc.d/"$service" ]; then run /usr/local/etc/rc.d/"$service" reload; continue; fi
@@ -1020,7 +1023,7 @@ rollover()
 	certname="$1"
 	[ ! -d "$le/current/$certname" ] && die "rollover $certname: Failed to find current $certname"
 	[ ! -d "$le/next/$certname" ] && die "rollover $certname: Failed to find next $certname"
-	[ -n "`tlsa_check $certname`" ] && die "rollover $certname: Refusing because tlsa-check fails: See: danectl check $certname"
+	[ -n "$(tlsa_check "$certname")" ] && die "rollover $certname: Refusing because tlsa-check fails: See: danectl check $certname"
 	# Identify the transition: original to duplicate, or duplicate to original
 	if readlink "$le/current/$certname" | grep -q ".-duplicate"
 	then
@@ -1037,7 +1040,7 @@ rollover()
 	run ln -s "$le/live/$certname$curr" "$le/next/$certname"
 	reload "$certname"
 	# Swap $curr and $next
-	if [ "x$curr" = "x" ]
+	if [ -z "$curr" ]
 	then
 		curr="-duplicate"
 		next=""
@@ -1050,10 +1053,10 @@ rollover()
 	tlsa_next "$certname" previous ";"
 	# Create the new next key/certificate
 	del_line "$le/renewal/$certname$next.conf" reuse_key
-	run certbot renew$quiet --force-renewal --cert-name "$certname$next" >&2
-	rc=$?
+	run certbot renew"$quiet" --force-renewal --cert-name "$certname$next" >&2
+	certbot_renew_rc=$?
 	add_line "$le/renewal/$certname$next.conf" "reuse_key = True"
-	[ $test = 0 -a $rc != 0 ] && die "rollover $certname: certbot failed after the rollover! You must successfully run: certbot renew --force-renewal --cert-name \"$certname$next\" (but first remove \"reuse_key = True\" from $le/renewal/$certname$next.conf and then put it back afterwards)"
+	[ $test = 0 ] && [ $certbot_renew_rc != 0 ] && die "rollover $certname: certbot failed after the rollover! You must successfully run: certbot renew --force-renewal --cert-name \"$certname$next\" (but first remove \"reuse_key = True\" from $le/renewal/$certname$next.conf and then put it back afterwards)"
 	# Show the new TLSA records that need to be published in the DNS
 	echo "; Publish the following new records in the DNS"
 	tlsa_next "$certname"
@@ -1069,7 +1072,7 @@ status()
 		do
 			[ -h "$symlink" ] || continue
 			certname="${symlink##*/}"
-			target="`readlink \"$symlink\"`"
+			target="$(readlink "$symlink")"
 			note=; [ ! -d "$symlink" ] && note=" (deleted)" && run rm "$symlink"
 			echo "$certname: $role ${target##*/}$note"
 		done
@@ -1092,7 +1095,7 @@ reuse_key_check()
 		do
 			[ -h "$symlink" ] || continue
 			[ -d "$symlink" ] || continue
-			target="`readlink \"$symlink\"`"
+			target="$(readlink "$symlink")"
 			certname="${target##*/}"
 			fname="$le/renewal/$certname.conf"
 			[ -f "$fname" ] || continue
@@ -1128,7 +1131,7 @@ add_line()
 {
 	fname="$1"; shift
 	line="$*"
-	line="`echo $line | sed -e 's/\s+/ /g' -e 's/^ //' -e 's/ $//'`"
+	line="$(echo "$line" | sed -e 's/\s+/ /g' -e 's/^ //' -e 's/ $//')"
 	[ $verbose = 1 ] && echo "Add \"$line\" to $fname"
 	[ $test = 0 ] && echo "$line" >> "$fname"
 }
@@ -1167,7 +1170,7 @@ set_rc()
 {
 	varname="$1"; shift
 	value="$*"
-	value="`echo \"$value\" | sed -e 's/^ //'`"
+	value="$(echo "$value" | sed -e 's/^ //')"
 	del_rc "$varname="
 	add_rc "$varname=\"$value\""
 }
@@ -1187,14 +1190,14 @@ idna()
 	domainname="$1"
 	if echo "$domainname" | LANG=C grep -q '^[_a-zA-Z0-9-][_a-zA-Z0-9.-]*$'
 	then
-		echo $domainname
+		echo "$domainname"
 	else
-		case "`which idn2 2>/dev/null`" in /*) ;; *) die "Failed to find idn2";; esac
+		case "$(command -v idn2)" in /*) ;; *) die "Failed to find idn2";; esac
 		idn2 -l -- "$domainname"
 	fi
 }
 
-# Terminate if $1 is empty. Used to check the output of `idna` in a subprocess.
+# Terminate if $1 is empty. Used to check the output of $(idna) in a subprocess.
 # If idn2 was required but not available, this terminates danectl the first
 # time its absence is noticed. idna() itself emits the error message.
 # This lazy requirements check means that idn2 is only required when there
@@ -1202,7 +1205,7 @@ idna()
 
 idna_check()
 {
-	[ "x$1" = x ] && exit 1
+	[ -z "$1" ] && exit 1
 }
 
 # Output a form of certname that is suitable for use in a shell variable identifier
@@ -1210,7 +1213,7 @@ idna_check()
 shcertname()
 {
 	certname="$1"
-	idna_certname="`idna $certname`"
+	idna_certname="$(idna "$certname")"
 	idna_check "$idna_certname"
 	echo "$idna_certname" | LANG=C sed 's/[^a-zA-Z0-9]/_/g'
 }
@@ -1219,17 +1222,17 @@ shcertname()
 
 check_host_or_drill()
 {
-	case "`which host 2>/dev/null`" in
+	case "$(command -v host)" in
 		/*) [ -z "$DANECTL_TEST_DRILL" ] && HAVE_HOST=1 || HAVE_HOST=0;;
 		*)  HAVE_HOST=0;;
 	esac
 
-	case "`which drill 2>/dev/null`" in
+	case "$(command -v drill)" in
 		/*) [ -z "$DANECTL_TEST_HOST" ] && HAVE_DRILL=1 || HAVE_DRILL=0;;
 		*)  HAVE_DRILL=0;;
 	esac
 
-	[ $HAVE_HOST = 0 -a $HAVE_DRILL = 0 ] && die "Failed to find host or drill"
+	[ "$HAVE_HOST" = 0 ] && [ "$HAVE_DRILL" = 0 ] && die "Failed to find host or drill"
 
 	export HAVE_HOST # For any perl sub-processes
 }
@@ -1245,7 +1248,7 @@ check_prerequisites()
 
 	for cmd in ls sed grep readlink certbot openssl sha256sum
 	do
-		case "`which $cmd 2>/dev/null`" in /*) ;; *) die "Failed to find $cmd";; esac
+		case "$(command -v $cmd)" in /*) ;; *) die "Failed to find $cmd";; esac
 	done
 
 	check_host_or_drill
@@ -1253,7 +1256,7 @@ check_prerequisites()
 	if [ -e "$danectlrc" ]
 	then
 		[ ! -O "$danectlrc" ] && die "$danectlrc is not owned by root"
-		case "`ls -lL \"$danectlrc\"`" in
+		case "$(ls -lL "$danectlrc")" in
 			-rw-r--r--*|-rw-r-----*|-rw-------*)
 				;;
 			*)
@@ -1293,7 +1296,7 @@ all_certnames()
 	do
 		[ -h "$symlink" ] || continue
 		certname="${symlink##*/}"
-		target="`readlink \"$symlink\"`"
+		target="$(readlink "$symlink")"
 		[ ! -d "$symlink" ] && continue
 		[ ! -d "$le/next/$certname" ] && continue
 		echo "$certname"
@@ -1306,7 +1309,7 @@ check_sshfp_prerequisites()
 {
 	for cmd in sed perl ssh-keygen
 	do
-		case "`which $cmd 2>/dev/null`" in /*) ;; *) die "Failed to find $cmd";; esac
+		case "$(command -v $cmd)" in /*) ;; *) die "Failed to find $cmd";; esac
 	done
 
 	check_host_or_drill
@@ -1316,7 +1319,7 @@ check_sshfp_prerequisites()
 
 sshfp()
 {
-	hostname="`idna $1`"
+	hostname="$(idna "$1")"
 	idna_check "$hostname"
 	ssh-keygen -r "$hostname" | sed -e 's/ /.	/' -e 's/ /	/' -e 's/ /	/'
 }
@@ -1325,7 +1328,7 @@ sshfp()
 
 sshfp_check()
 {
-	hostname="`idna $1`"
+	hostname="$(idna "$1")"
 	idna_check "$hostname"
 	perl -e '
 		use strict;
@@ -1352,7 +1355,7 @@ check_openpgpkey_prerequisites()
 {
 	for cmd in gpg perl
 	do
-		case "`which $cmd 2>/dev/null`" in /*) ;; *) die "Failed to find $cmd";; esac
+		case "$(command -v $cmd)" in /*) ;; *) die "Failed to find $cmd";; esac
 	done
 
 	check_host_or_drill
@@ -1495,7 +1498,7 @@ check_smimea_prerequisites()
 {
 	for cmd in openssl perl
 	do
-		case "`which $cmd 2>/dev/null`" in /*) ;; *) die "Failed to find $cmd";; esac
+		case "$(command -v $cmd)" in /*) ;; *) die "Failed to find $cmd";; esac
 	done
 
 	check_host_or_drill
@@ -1508,7 +1511,7 @@ smimea()
 	cert="$1"
 	[ ! -f "$cert" ] && die "$cert is not a file"
 	openssl x509 -inform pem -in "$cert" -noout -purpose | grep -q 'S/MIME encryption : Yes' || die "$cert is not an S/MIME certificate"
-	email="`openssl x509 -inform pem -in \"$cert\" -noout -text | perl -e '
+	email="$(openssl x509 -inform pem -in "$cert" -noout -text | perl -e '
 		use strict;
 		use warnings;
 		while (<>)
@@ -1519,7 +1522,7 @@ smimea()
 			print("$1\n"), last if /CN\s*=\s*(\S+@\S+)$/;
 		}
 		while (<>) {}
-	'`"
+	')"
 	[ -z "$email" ] && die "Failed to find an email address in the certificate"
 	openssl x509 -inform pem -in "$cert" -outform der | perl -e '
 		use strict;
@@ -1562,7 +1565,7 @@ smimea_check()
 	cert="$1"
 	[ ! -f "$cert" ] && die "$cert is not a file"
 	openssl x509 -inform pem -in "$cert" -noout -purpose | grep -q 'S/MIME encryption : Yes' || die "$cert is not an S/MIME certificate"
-	email="`openssl x509 -inform pem -in \"$cert\" -noout -text | perl -e '
+	email="$(openssl x509 -inform pem -in "$cert" -noout -text | perl -e '
 		use strict;
 		use warnings;
 		while (<>)
@@ -1573,7 +1576,7 @@ smimea_check()
 			print("$1\n"), last if /CN\s*=\s*(\S+@\S+)$/;
 		}
 		while (<>) {}
-	'`"
+	')"
 	[ -z "$email" ] && die "Failed to find an email address in the certificate"
 	openssl x509 -inform pem -in "$cert" -outform der | perl -e '
 		use strict;
@@ -1767,7 +1770,7 @@ case "$command" in
 	tlsa-check|check-tlsa|check|tch|cht|ch|chk)
 		check_prerequisites
 		[ $# != 0 ] && check_both_certnames "$@"
-		for certname in ${*:-`all_certnames`}; do tlsa_check "$certname"; done
+		for certname in ${*:-$(all_certnames)}; do tlsa_check "$certname"; done
 		[ $# = 0 ] && reuse_key_check '; '
 		;;
 
